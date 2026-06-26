@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta
+      name="description"
+      content="TSY.Microglow 微光貪吃蛇小遊戲，支援桌機鍵盤與手機觸控。"
+    >
+    <title>微光貪吃蛇｜TSY.Microglow Games</title>
+    <link rel="stylesheet" href="../../shared/base.css">
+    <link rel="stylesheet" href="./snake.css">
+  </head>
+  <body>
+    <main class="snake-shell">
+      <header class="game-topbar">
+        <nav class="return-nav" aria-label="返回連結">
+          <a class="back-link compact-back" href="../../">回小遊戲大廳</a>
+          <a class="portal-return" href="https://tsy3991.github.io/TSY.Microglow-Website/" data-portal-return>返回入口網站</a>
+        </nav>
+        <div>
+          <p class="eyebrow">Microglow Snake</p>
+          <h1>微光貪吃蛇</h1>
+        </div>
+        <div class="top-actions" aria-label="遊戲控制">
+          <button type="button" data-action="start">開始</button>
+          <button type="button" data-action="pause">暫停</button>
+          <button type="button" data-action="restart">重開</button>
+        </div>
+      </header>
+
+      <section class="snake-layout" aria-label="微光貪吃蛇遊戲區">
+        <div class="board-wrap">
+          <canvas id="snakeBoard" width="480" height="480" aria-label="貪吃蛇主遊戲區"></canvas>
+          <div class="game-overlay" data-overlay>
+            <strong data-overlay-title>準備開始</strong>
+            <span data-overlay-message>方向鍵或 WASD 移動，空白鍵開始 / 暫停</span>
+            <button type="button" data-action="overlay-start">開始遊戲</button>
+          </div>
+        </div>
+
+        <aside class="snake-panel" aria-label="分數與狀態">
+          <div class="score-grid">
+            <div>
+              <span>分數</span>
+              <strong data-score>0</strong>
+            </div>
+            <div>
+              <span>最高分</span>
+              <strong data-best>0</strong>
+            </div>
+            <div>
+              <span>長度</span>
+              <strong data-length>3</strong>
+            </div>
+            <div>
+              <span>遊玩</span>
+              <strong data-plays>0</strong>
+            </div>
+          </div>
+
+          <div class="help-card">
+            <h2>操作</h2>
+            <p>桌機：方向鍵或 WASD 移動，空白鍵開始 / 暫停，R 重新開始。</p>
+            <p>手機：使用下方方向按鈕，也可以在棋盤上滑動控制方向。</p>
+          </div>
+        </aside>
+      </section>
+
+      <section class="touch-controls" aria-label="手機觸控控制">
+        <span></span>
+        <button type="button" data-control="up">上</button>
+        <span></span>
+        <button type="button" data-control="left">左</button>
+        <button type="button" data-control="down">下</button>
+        <button type="button" data-control="right">右</button>
+      </section>
+    </main>
+
+    <script src="../../shared/portal-return.js"></script>
+    <script src="./snake.js"></script>
+  </body>
+</html>

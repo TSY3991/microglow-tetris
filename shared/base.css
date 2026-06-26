@@ -298,6 +298,52 @@ p {
   background: var(--yellow);
 }
 
+.snake-path span {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--lime);
+  box-shadow: 0 0 18px var(--lime);
+}
+
+.snake-path span:nth-child(1) {
+  top: 34px;
+  left: 34px;
+}
+
+.snake-path span:nth-child(2) {
+  top: 34px;
+  left: 66px;
+}
+
+.snake-path span:nth-child(3) {
+  top: 34px;
+  left: 98px;
+  background: var(--cyan);
+  box-shadow: 0 0 20px var(--cyan);
+}
+
+.snake-path span:nth-child(4) {
+  top: 66px;
+  left: 98px;
+}
+
+.snake-path span:nth-child(5) {
+  top: 98px;
+  left: 98px;
+}
+
+.snake-path span:nth-child(6) {
+  top: 98px;
+  left: 58px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--pink);
+  box-shadow: 0 0 20px var(--pink);
+}
+
 .muted-thumb {
   background: #ecf5f2;
 }
