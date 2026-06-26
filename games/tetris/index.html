@@ -32,22 +32,22 @@
       </header>
 
       <section class="game-layout" aria-label="俄羅斯方塊遊戲區">
-        <div class="board-wrap">
-          <canvas id="gameBoard" width="300" height="600" aria-label="俄羅斯方塊主遊戲區"></canvas>
-          <div class="game-overlay" data-overlay>
-            <strong data-overlay-title>準備開始</strong>
-            <span data-overlay-message>按開始、空白鍵或手機按鈕即可遊玩</span>
-            <button type="button" data-action="start">開始遊戲</button>
+        <div class="playfield">
+          <div class="board-wrap">
+            <canvas id="gameBoard" width="300" height="600" aria-label="俄羅斯方塊主遊戲區"></canvas>
+            <div class="game-overlay" data-overlay>
+              <strong data-overlay-title>準備開始</strong>
+              <span data-overlay-message>按開始、空白鍵或手機按鈕即可遊玩</span>
+              <button type="button" data-action="start">開始遊戲</button>
+            </div>
           </div>
-        </div>
 
-        <aside class="game-panel" aria-label="分數與狀態">
-          <div class="next-card">
+          <aside class="next-card" aria-label="後續方塊預覽">
             <div class="next-heading">
               <span>後續方塊</span>
               <small data-preview-status>Lv.1-5 顯示 1 顆</small>
             </div>
-            <div class="next-stack" aria-label="後續方塊預覽">
+            <div class="next-stack">
               <div class="next-slot">
                 <canvas width="92" height="92" aria-label="後續第 1 顆方塊" data-preview-canvas></canvas>
                 <small>1</small>
@@ -69,8 +69,10 @@
                 <small>5</small>
               </div>
             </div>
-          </div>
+          </aside>
+        </div>
 
+        <aside class="game-panel" aria-label="分數與狀態">
           <div class="score-grid">
             <div>
               <span>分數</span>

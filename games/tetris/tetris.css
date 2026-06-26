@@ -108,9 +108,17 @@ body {
 
 .game-layout {
   display: grid;
-  grid-template-columns: minmax(310px, 420px) minmax(280px, 1fr);
+  grid-template-columns: minmax(430px, 560px) minmax(260px, 1fr);
   gap: 18px;
   align-items: start;
+}
+
+.playfield {
+  display: grid;
+  grid-template-columns: minmax(300px, 420px) 116px;
+  gap: 12px;
+  align-items: start;
+  min-width: 0;
 }
 
 .board-wrap {
@@ -187,22 +195,23 @@ body {
 
 .next-card {
   display: grid;
-  gap: 12px;
-  padding: 14px;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  align-self: start;
 }
 
 .next-heading {
-  display: flex;
+  display: grid;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 3px;
 }
 
 .next-heading small {
   color: var(--teal-deep);
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   font-weight: 950;
-  white-space: nowrap;
+  line-height: 1.25;
 }
 
 .next-stack {
@@ -214,19 +223,18 @@ body {
 .next-slot {
   position: relative;
   display: grid;
-  grid-template-columns: 62px minmax(0, 1fr);
-  gap: 8px;
+  gap: 5px;
   align-items: center;
-  justify-items: start;
+  justify-items: center;
   min-width: 0;
-  padding: 7px;
+  padding: 6px;
   border: 1px solid rgba(21, 39, 43, 0.08);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.48);
 }
 
 .next-slot canvas {
-  width: 62px;
+  width: min(100%, 72px);
   aspect-ratio: 1;
   height: auto;
   border-radius: 6px;
@@ -247,7 +255,7 @@ body {
 .next-slot.is-locked::after {
   position: absolute;
   top: 50%;
-  left: 38px;
+  left: 50%;
   color: rgba(255, 255, 255, 0.82);
   font-size: 0.7rem;
   font-weight: 950;
@@ -452,8 +460,12 @@ body {
     grid-template-columns: 1fr;
   }
 
+  .playfield {
+    grid-template-columns: minmax(0, 1fr) 104px;
+  }
+
   .game-panel {
-    grid-template-columns: 150px minmax(0, 1fr);
+    grid-template-columns: 1fr;
   }
 
   .help-card {
@@ -531,13 +543,20 @@ body {
     overflow: hidden;
   }
 
+  .playfield {
+    grid-template-columns: minmax(0, 1fr) 58px;
+    gap: 6px;
+    min-height: 0;
+  }
+
   .board-wrap {
     padding: 8px;
+    min-width: 0;
   }
 
   #gameBoard {
-    width: min(100%, 230px, calc((100dvh - 298px) / 2));
-    min-width: 160px;
+    width: min(100%, 230px, calc((100dvh - 298px) / 2), calc(100vw - 100px));
+    min-width: 150px;
     touch-action: none;
   }
 
@@ -551,9 +570,52 @@ body {
     min-height: 0;
   }
 
-  .next-card,
   .help-card {
     display: none;
+  }
+
+  .next-card {
+    display: grid;
+    gap: 5px;
+    padding: 5px;
+    border-radius: 6px;
+  }
+
+  .next-heading {
+    gap: 2px;
+  }
+
+  .next-heading span {
+    font-size: 0.68rem;
+    line-height: 1.1;
+  }
+
+  .next-heading small {
+    display: none;
+  }
+
+  .next-stack {
+    gap: 5px;
+  }
+
+  .next-slot {
+    gap: 2px;
+    padding: 3px;
+    border-radius: 5px;
+  }
+
+  .next-slot canvas {
+    width: 42px;
+    border-radius: 5px;
+  }
+
+  .next-slot small {
+    font-size: 0.62rem;
+    line-height: 1;
+  }
+
+  .next-slot.is-locked::after {
+    font-size: 0.48rem;
   }
 
   .score-grid {
@@ -637,7 +699,21 @@ body {
   }
 
   #gameBoard {
-    width: min(100%, 210px, calc((100dvh - 286px) / 2));
+    width: min(100%, 210px, calc((100dvh - 286px) / 2), calc(100vw - 88px));
+    min-width: 138px;
+  }
+
+  .playfield {
+    grid-template-columns: minmax(0, 1fr) 52px;
+    gap: 5px;
+  }
+
+  .next-card {
+    padding: 4px;
+  }
+
+  .next-slot canvas {
+    width: 38px;
   }
 
   .touch-controls button {
