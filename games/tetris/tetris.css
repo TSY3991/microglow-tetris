@@ -90,6 +90,11 @@ body {
   background: linear-gradient(135deg, var(--cyan), var(--lime));
 }
 
+.top-actions button[aria-pressed="false"] {
+  color: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.14);
+}
+
 .game-layout {
   display: grid;
   grid-template-columns: minmax(310px, 420px) minmax(280px, 1fr);

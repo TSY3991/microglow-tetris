@@ -18,6 +18,7 @@
   const gameId = "microglow-tetris";
   const gameTitle = "微光俄羅斯方塊";
   const bestKey = "tetris.bestScore.v1";
+  const gestureKey = "tetris.gesturesEnabled.v1";
   const portalStatsKey = "tsyMicroglowPortal.gameStats.v1";
 
   const colors = {
@@ -72,9 +73,17 @@
   let running = false;
   let paused = false;
   let soundOn = true;
+  let gesturesOn = storage?.read(gestureKey, true) !== false;
   let audioContext = null;
+  let gestureStart = null;
+  let lastTap = {
+    time: 0,
+    x: 0,
+    y: 0
+  };
 
   ensurePortalStats();
+  updateGestureButton();
   bestEl.textContent = String(best);
   draw();
   drawNext();
@@ -465,6 +474,65 @@
       button.textContent = soundOn ? "音效開" : "音效關";
       button.setAttribute("aria-pressed", String(soundOn));
     }
+    if (action === "gesture") {
+      gesturesOn = !gesturesOn;
+      storage?.write(gestureKey, gesturesOn);
+      updateGestureButton();
+    }
+  }
+
+  function updateGestureButton() {
+    const button = document.querySelector('[data-action="gesture"]');
+    if (!button) return;
+    button.textContent = gesturesOn ? "手勢開" : "手勢關";
+    button.setAttribute("aria-pressed", String(gesturesOn));
+  }
+
+  function ensureGestureGame() {
+    if (!running) {
+      resetGame();
+      return true;
+    }
+    return !paused;
+  }
+
+  function handleBoardGesture(start, end) {
+    if (!gesturesOn || !start || !ensureGestureGame()) return;
+
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+    const elapsed = end.time - start.time;
+    const tapDistance = Math.hypot(dx, dy);
+    const isTap = tapDistance < 14 && elapsed < 260;
+
+    if (isTap) {
+      const tapGap = end.time - lastTap.time;
+      const tapMove = Math.hypot(end.x - lastTap.x, end.y - lastTap.y);
+      if (tapGap > 0 && tapGap < 320 && tapMove < 28) {
+        rotatePiece();
+        lastTap = { time: 0, x: 0, y: 0 };
+        return;
+      }
+      lastTap = { time: end.time, x: end.x, y: end.y };
+      return;
+    }
+
+    lastTap = { time: 0, x: 0, y: 0 };
+
+    if (dy > 34 && absY > absX * 1.18) {
+      hardDrop();
+      return;
+    }
+
+    if (absX > 24 && absX > absY * 1.12) {
+      const direction = dx > 0 ? 1 : -1;
+      const steps = Math.min(3, Math.max(1, Math.round(absX / 44)));
+      for (let index = 0; index < steps; index += 1) {
+        move(direction);
+      }
+    }
   }
 
   document.addEventListener("keydown", (event) => {
@@ -498,6 +566,47 @@
       if (control === "rotate") rotatePiece();
       if (control === "drop") hardDrop();
     }, { passive: false });
+  });
+
+  boardCanvas.addEventListener("pointerdown", (event) => {
+    if (!gesturesOn) return;
+    event.preventDefault();
+    gestureStart = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      time: Date.now()
+    };
+    try {
+      boardCanvas.setPointerCapture?.(event.pointerId);
+    } catch {
+      // Some browsers reject capture for synthetic or interrupted pointers.
+    }
+  }, { passive: false });
+
+  boardCanvas.addEventListener("pointermove", (event) => {
+    if (!gesturesOn || !gestureStart) return;
+    event.preventDefault();
+  }, { passive: false });
+
+  boardCanvas.addEventListener("pointerup", (event) => {
+    if (!gesturesOn || !gestureStart || event.pointerId !== gestureStart.pointerId) return;
+    event.preventDefault();
+    handleBoardGesture(gestureStart, {
+      x: event.clientX,
+      y: event.clientY,
+      time: Date.now()
+    });
+    try {
+      boardCanvas.releasePointerCapture?.(event.pointerId);
+    } catch {
+      // Ignore if the pointer was not captured.
+    }
+    gestureStart = null;
+  }, { passive: false });
+
+  boardCanvas.addEventListener("pointercancel", () => {
+    gestureStart = null;
   });
 
   gameShell?.addEventListener("touchmove", (event) => {
