@@ -107,6 +107,7 @@ p {
   position: absolute;
   top: 18px;
   left: 18px;
+  z-index: 10;
   display: inline-flex;
   min-height: 38px;
   align-items: center;
@@ -117,6 +118,8 @@ p {
   background: rgba(255, 255, 255, 0.08);
   font-size: 0.92rem;
   font-weight: 900;
+  pointer-events: auto;
+  touch-action: manipulation;
 }
 
 .hero-copy {
