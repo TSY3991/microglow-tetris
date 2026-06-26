@@ -207,21 +207,26 @@ body {
 
 .next-stack {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 8px;
 }
 
 .next-slot {
   position: relative;
   display: grid;
-  gap: 4px;
-  justify-items: center;
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  justify-items: start;
   min-width: 0;
+  padding: 7px;
+  border: 1px solid rgba(21, 39, 43, 0.08);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.48);
 }
 
 .next-slot canvas {
-  width: 100%;
-  max-width: 92px;
+  width: 62px;
   aspect-ratio: 1;
   height: auto;
   border-radius: 6px;
@@ -230,7 +235,7 @@ body {
 
 .next-slot small {
   color: rgba(56, 80, 84, 0.72);
-  font-size: 0.7rem;
+  font-size: 0.82rem;
   font-weight: 950;
 }
 
@@ -242,7 +247,7 @@ body {
 .next-slot.is-locked::after {
   position: absolute;
   top: 50%;
-  left: 50%;
+  left: 38px;
   color: rgba(255, 255, 255, 0.82);
   font-size: 0.7rem;
   font-weight: 950;

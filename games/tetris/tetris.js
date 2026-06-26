@@ -123,7 +123,7 @@
   }
 
   function visiblePreviewCount() {
-    return Math.min(maxPreviewCount, Math.max(1, level));
+    return Math.min(maxPreviewCount, Math.floor((level - 1) / 5) + 1);
   }
 
   function resetGame() {
@@ -371,7 +371,12 @@
 
   function drawPreviews() {
     const visibleCount = visiblePreviewCount();
-    if (previewStatusEl) previewStatusEl.textContent = `Lv.${level} 顯示 ${visibleCount} 顆`;
+    const nextUnlockLevel = visibleCount < maxPreviewCount ? visibleCount * 5 + 1 : null;
+    if (previewStatusEl) {
+      previewStatusEl.textContent = nextUnlockLevel
+        ? `Lv.${level} 顯示 ${visibleCount} 顆，Lv.${nextUnlockLevel} +1`
+        : `Lv.${level} 顯示 5 顆`;
+    }
 
     previewCanvases.forEach((canvas, index) => {
       const context = canvas.getContext("2d");
