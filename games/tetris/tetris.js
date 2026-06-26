@@ -487,7 +487,8 @@
   });
 
   document.querySelectorAll("[data-control]").forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
       const control = button.dataset.control;
       if (!running) resetGame();
       if (control === "left") move(-1);
@@ -495,6 +496,6 @@
       if (control === "down") softDrop();
       if (control === "rotate") rotatePiece();
       if (control === "drop") hardDrop();
-    });
+    }, { passive: false });
   });
 })();
