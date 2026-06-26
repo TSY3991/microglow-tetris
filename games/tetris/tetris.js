@@ -20,6 +20,7 @@
   const bestKey = "tetris.bestScore.v1";
   const gestureKey = "tetris.gesturesEnabled.v1";
   const portalStatsKey = "tsyMicroglowPortal.gameStats.v1";
+  let lastTouchEnd = 0;
 
   const colors = {
     I: "#2fd7ff",
@@ -612,4 +613,22 @@
   gameShell?.addEventListener("touchmove", (event) => {
     event.preventDefault();
   }, { passive: false });
+
+  gameShell?.addEventListener("dblclick", (event) => {
+    event.preventDefault();
+  }, { passive: false });
+
+  gameShell?.addEventListener("touchend", (event) => {
+    const now = Date.now();
+    if (now - lastTouchEnd < 360) {
+      event.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, { passive: false });
+
+  ["gesturestart", "gesturechange", "gestureend"].forEach((eventName) => {
+    document.addEventListener(eventName, (event) => {
+      event.preventDefault();
+    }, { passive: false });
+  });
 })();

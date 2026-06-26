@@ -301,6 +301,7 @@ body {
   body {
     height: 100dvh;
     overflow: hidden;
+    touch-action: none;
   }
 
   .tetris-shell {
@@ -312,6 +313,7 @@ body {
     padding-top: max(8px, env(safe-area-inset-top));
     padding-bottom: max(8px, env(safe-area-inset-bottom));
     overflow: hidden;
+    touch-action: none;
   }
 
   .game-topbar {
@@ -363,6 +365,7 @@ body {
   #gameBoard {
     width: min(100%, 230px, calc((100dvh - 298px) / 2));
     min-width: 160px;
+    touch-action: none;
   }
 
   .game-overlay {
@@ -408,11 +411,13 @@ body {
     border-radius: var(--radius);
     background: rgba(255, 255, 255, 0.84);
     backdrop-filter: blur(12px);
+    touch-action: none;
   }
 
   .touch-controls button {
     min-height: 48px;
     font-size: 0.82rem;
+    touch-action: none;
   }
 }
 
