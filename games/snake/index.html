@@ -23,6 +23,7 @@
           <h1>微光貪吃蛇</h1>
         </div>
         <div class="top-actions" aria-label="遊戲控制">
+          <button type="button" data-action="instructions">玩法</button>
           <button type="button" data-action="start">開始</button>
           <button type="button" data-action="pause">暫停</button>
           <button type="button" data-action="restart">重開</button>
@@ -75,6 +76,36 @@
         <button type="button" data-control="down">下</button>
         <button type="button" data-control="right">右</button>
       </section>
+
+      <div class="instruction-modal" role="dialog" aria-modal="true" aria-labelledby="instruction-title" data-instruction-modal>
+        <div class="instruction-card">
+          <p class="instruction-kicker">遊玩方式</p>
+          <h2 id="instruction-title">按住棋盤控制方向</h2>
+          <div class="instruction-list">
+            <div>
+              <strong>桌機操作</strong>
+              <span>方向鍵或 WASD 移動，空白鍵開始 / 暫停，R 重新開始。</span>
+            </div>
+            <div>
+              <strong>手機操作</strong>
+              <span>按住或拖曳棋盤，蛇會朝手指所在方向移動；下方方向鍵也可以操作。</span>
+            </div>
+            <div>
+              <strong>邊界穿越</strong>
+              <span>碰到棋盤邊界不會結束，會從另一側出來。</span>
+            </div>
+            <div>
+              <strong>分數目標</strong>
+              <span>吃到粉色能量點會加分、加長，撞到自己的身體才會結束。</span>
+            </div>
+          </div>
+          <p class="instruction-note">遊戲結束後可按「再玩一次」重新開始。</p>
+          <div class="instruction-actions">
+            <button type="button" data-instruction-start>開始遊戲</button>
+            <button type="button" data-instruction-close>先看看</button>
+          </div>
+        </div>
+      </div>
     </main>
 
     <script src="../../shared/portal-return.js"></script>

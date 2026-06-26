@@ -11,6 +11,7 @@
   const lengthEl = document.querySelector("[data-length]");
   const playsEl = document.querySelector("[data-plays]");
   const gameShell = document.querySelector(".snake-shell");
+  const instructionModal = document.querySelector("[data-instruction-modal]");
   const gameId = "microglow-snake";
   const gameTitle = "微光貪吃蛇";
   const portalStatsKey = "tsyMicroglowPortal.gameStats.v1";
@@ -311,6 +312,10 @@
   }
 
   function handleAction(action) {
+    if (action === "instructions") {
+      openInstruction();
+      return;
+    }
     if (action === "start" || action === "overlay-start") {
       if (!running) startGame();
       else if (paused) togglePause();
@@ -330,6 +335,19 @@
 
   function isSpaceKey(key) {
     return key === " " || key === "Space" || key === "Spacebar";
+  }
+
+  function isInstructionOpen() {
+    return Boolean(instructionModal && !instructionModal.hidden);
+  }
+
+  function openInstruction() {
+    if (instructionModal) instructionModal.hidden = false;
+  }
+
+  function closeInstruction(shouldStart) {
+    if (instructionModal) instructionModal.hidden = true;
+    if (shouldStart && !running) startGame();
   }
 
   function handleSwipe(start, end) {
@@ -372,6 +390,18 @@
 
   document.addEventListener("keydown", (event) => {
     const directionName = directionFromKey(event.key);
+    if (isInstructionOpen()) {
+      if (event.key === "Enter" || isSpaceKey(event.key)) {
+        event.preventDefault();
+        closeInstruction(true);
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeInstruction(false);
+      }
+      return;
+    }
+
     if (directionName) {
       event.preventDefault();
       setDirection(directionName);
@@ -392,6 +422,14 @@
 
   document.querySelectorAll("[data-action]").forEach((button) => {
     button.addEventListener("click", () => handleAction(button.dataset.action));
+  });
+
+  document.querySelector("[data-instruction-start]")?.addEventListener("click", () => {
+    closeInstruction(true);
+  });
+
+  document.querySelector("[data-instruction-close]")?.addEventListener("click", () => {
+    closeInstruction(false);
   });
 
   document.querySelectorAll("[data-control]").forEach((button) => {
