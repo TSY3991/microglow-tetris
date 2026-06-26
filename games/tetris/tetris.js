@@ -2,10 +2,11 @@
   const columns = 10;
   const rows = 20;
   const cellSize = 30;
+  const maxPreviewCount = 5;
   const boardCanvas = document.querySelector("#gameBoard");
-  const nextCanvas = document.querySelector("#nextBoard");
   const boardContext = boardCanvas.getContext("2d");
-  const nextContext = nextCanvas.getContext("2d");
+  const previewCanvases = Array.from(document.querySelectorAll("[data-preview-canvas]"));
+  const previewStatusEl = document.querySelector("[data-preview-status]");
   const overlay = document.querySelector("[data-overlay]");
   const overlayTitle = document.querySelector("[data-overlay-title]");
   const overlayMessage = document.querySelector("[data-overlay-message]");
@@ -63,7 +64,7 @@
 
   let board = createBoard();
   let current = null;
-  let next = createPiece();
+  let queue = createQueue();
   let score = 0;
   let lines = 0;
   let level = 1;
@@ -74,6 +75,7 @@
   let animationFrameId = 0;
   let running = false;
   let paused = false;
+  let swapUsed = false;
   let soundOn = true;
   let gesturesOn = storage?.read(gestureKey, true) !== false;
   let audioContext = null;
@@ -86,9 +88,10 @@
 
   ensurePortalStats();
   updateGestureButton();
+  updateSwapButton();
   bestEl.textContent = String(best);
   draw();
-  drawNext();
+  drawPreviews();
 
   function createBoard() {
     return Array.from({ length: rows }, () => Array(columns).fill(null));
@@ -109,17 +112,33 @@
     };
   }
 
+  function createQueue() {
+    return Array.from({ length: maxPreviewCount }, randomType);
+  }
+
+  function fillQueue() {
+    while (queue.length < maxPreviewCount) {
+      queue.push(randomType());
+    }
+  }
+
+  function visiblePreviewCount() {
+    return Math.min(maxPreviewCount, Math.max(1, level));
+  }
+
   function resetGame() {
     if (animationFrameId) {
       cancelAnimationFrame(animationFrameId);
       animationFrameId = 0;
     }
     board = createBoard();
-    current = next;
-    next = createPiece();
+    queue = createQueue();
+    current = createPiece(queue.shift());
+    fillQueue();
     score = 0;
     lines = 0;
     level = 1;
+    swapUsed = false;
     dropInterval = 820;
     dropCounter = 0;
     lastTime = 0;
@@ -131,7 +150,8 @@
     }
     hideOverlay();
     updateUi();
-    drawNext();
+    drawPreviews();
+    updateSwapButton();
     animationFrameId = requestAnimationFrame(update);
   }
 
@@ -196,14 +216,17 @@
     dropInterval = Math.max(140, 820 - (level - 1) * 68);
     playTone(420 + cleared * 80, 0.08);
     updateUi();
+    drawPreviews();
   }
 
   function spawnPiece() {
-    current = next;
+    current = createPiece(queue.shift());
     current.x = Math.floor((columns - current.matrix[0].length) / 2);
     current.y = 0;
-    next = createPiece();
-    drawNext();
+    fillQueue();
+    swapUsed = false;
+    drawPreviews();
+    updateSwapButton();
     if (collides(current)) gameOver();
   }
 
@@ -247,6 +270,32 @@
     playTone(120, 0.08);
     updateUi();
     draw();
+  }
+
+  function swapWithNext() {
+    if (!canPlay() || swapUsed || !queue.length) return;
+
+    const previousType = current.type;
+    const incomingType = queue.shift();
+    const incoming = createPiece(incomingType);
+    incoming.y = current.y;
+
+    if (collides(incoming)) {
+      incoming.y = 0;
+    }
+
+    if (collides(incoming)) {
+      queue.unshift(incomingType);
+      return;
+    }
+
+    queue.unshift(previousType);
+    current = incoming;
+    swapUsed = true;
+    updateSwapButton();
+    drawPreviews();
+    draw();
+    playTone(520, 0.05);
   }
 
   function rotatePiece() {
@@ -296,6 +345,7 @@
     updateUi();
     draw();
     showOverlay("遊戲結束", `本局 ${score} 分，最高分 ${best} 分`, "再玩一次");
+    updateSwapButton();
     playTone(90, 0.16);
   }
 
@@ -319,16 +369,28 @@
     }
   }
 
-  function drawNext() {
-    const size = 24;
-    nextContext.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
-    drawBackground(nextContext, nextCanvas.width, nextCanvas.height, size);
-    const matrix = next.matrix;
-    const offsetX = Math.floor((5 - matrix[0].length) / 2);
-    const offsetY = Math.floor((5 - matrix.length) / 2);
-    matrix.forEach((row, y) => {
-      row.forEach((value, x) => {
-        if (value) drawBlock(nextContext, offsetX + x, offsetY + y, colors[next.type], size);
+  function drawPreviews() {
+    const visibleCount = visiblePreviewCount();
+    if (previewStatusEl) previewStatusEl.textContent = `Lv.${level} 顯示 ${visibleCount} 顆`;
+
+    previewCanvases.forEach((canvas, index) => {
+      const context = canvas.getContext("2d");
+      const slot = canvas.closest(".next-slot");
+      const type = queue[index];
+      const locked = index >= visibleCount;
+
+      slot?.classList.toggle("is-locked", locked);
+      drawBackground(context, canvas.width, canvas.height, 23);
+
+      if (!type || locked) return;
+
+      const matrix = shapes[type];
+      const offsetX = Math.floor((4 - matrix[0].length) / 2);
+      const offsetY = Math.floor((4 - matrix.length) / 2);
+      matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+          if (value) drawBlock(context, offsetX + x, offsetY + y, colors[type], 23);
+        });
       });
     });
   }
@@ -374,6 +436,7 @@
     bestEl.textContent = String(best);
     levelEl.textContent = String(level);
     linesEl.textContent = String(lines);
+    updateSwapButton();
   }
 
   function readPortalStats() {
@@ -470,6 +533,7 @@
     }
     if (action === "pause") togglePause();
     if (action === "restart") resetGame();
+    if (action === "swap") swapWithNext();
     if (action === "sound") {
       soundOn = !soundOn;
       const button = document.querySelector('[data-action="sound"]');
@@ -497,6 +561,14 @@
     if (!button) return;
     button.textContent = gesturesOn ? "手勢開" : "手勢關";
     button.setAttribute("aria-pressed", String(gesturesOn));
+  }
+
+  function updateSwapButton() {
+    const disabled = !running || paused || swapUsed || !current;
+    document.querySelectorAll('[data-action="swap"], [data-control="swap"]').forEach((button) => {
+      button.disabled = disabled;
+      button.textContent = swapUsed ? "已換" : "換下顆";
+    });
   }
 
   function ensureGestureGame() {
@@ -547,7 +619,7 @@
   }
 
   document.addEventListener("keydown", (event) => {
-    const keys = ["ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp", " ", "p", "P", "Enter"];
+    const keys = ["ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp", " ", "p", "P", "c", "C", "Enter"];
     if (!keys.includes(event.key)) return;
     event.preventDefault();
     if (isInstructionOpen()) {
@@ -564,6 +636,7 @@
     if (event.key === "ArrowUp") rotatePiece();
     if (event.key === " ") hardDrop();
     if (event.key === "p" || event.key === "P") togglePause();
+    if (event.key === "c" || event.key === "C") swapWithNext();
   });
 
   document.querySelectorAll("[data-action]").forEach((button) => {
@@ -587,6 +660,7 @@
       if (control === "right") move(1);
       if (control === "down") softDrop();
       if (control === "rotate") rotatePiece();
+      if (control === "swap") swapWithNext();
       if (control === "drop") hardDrop();
     }, { passive: false });
   });

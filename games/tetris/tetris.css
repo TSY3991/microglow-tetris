@@ -99,6 +99,13 @@ body {
   background: rgba(255, 255, 255, 0.14);
 }
 
+.top-actions button:disabled,
+.touch-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  filter: grayscale(0.6);
+}
+
 .game-layout {
   display: grid;
   grid-template-columns: minmax(310px, 420px) minmax(280px, 1fr);
@@ -180,9 +187,67 @@ body {
 
 .next-card {
   display: grid;
-  justify-items: center;
+  gap: 12px;
+  padding: 14px;
+}
+
+.next-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
-  padding: 16px;
+}
+
+.next-heading small {
+  color: var(--teal-deep);
+  font-size: 0.78rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.next-stack {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.next-slot {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  min-width: 0;
+}
+
+.next-slot canvas {
+  width: 100%;
+  max-width: 92px;
+  aspect-ratio: 1;
+  height: auto;
+  border-radius: 6px;
+  background: #0a1d24;
+}
+
+.next-slot small {
+  color: rgba(56, 80, 84, 0.72);
+  font-size: 0.7rem;
+  font-weight: 950;
+}
+
+.next-slot.is-locked canvas {
+  opacity: 0.42;
+  filter: grayscale(0.85);
+}
+
+.next-slot.is-locked::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.7rem;
+  font-weight: 950;
+  transform: translate(-50%, -58%);
+  content: "LOCK";
 }
 
 .next-card span,
@@ -190,13 +255,6 @@ body {
   color: var(--muted);
   font-size: 0.86rem;
   font-weight: 900;
-}
-
-#nextBoard {
-  width: 120px;
-  height: 120px;
-  border-radius: 6px;
-  background: #0a1d24;
 }
 
 .score-grid {
@@ -241,7 +299,7 @@ body {
 
 .touch-controls {
   display: none;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
   margin-top: 12px;
 }
@@ -457,8 +515,8 @@ body {
 
   .top-actions button {
     min-height: 36px;
-    padding: 0 10px;
-    font-size: 0.84rem;
+    padding: 0 8px;
+    font-size: 0.78rem;
   }
 
   .game-layout {
@@ -526,7 +584,8 @@ body {
 
   .touch-controls button {
     min-height: 48px;
-    font-size: 0.82rem;
+    padding: 0 3px;
+    font-size: 0.74rem;
     touch-action: none;
   }
 
@@ -578,6 +637,7 @@ body {
 
   .touch-controls button {
     min-height: 46px;
-    padding: 0 4px;
+    padding: 0 2px;
+    font-size: 0.68rem;
   }
 }

@@ -25,6 +25,7 @@
         <div class="top-actions" aria-label="遊戲控制">
           <button type="button" data-action="sound" aria-pressed="true">音效開</button>
           <button type="button" data-action="gesture" aria-pressed="true">手勢開</button>
+          <button type="button" data-action="swap">換下顆</button>
           <button type="button" data-action="pause">暫停</button>
           <button type="button" data-action="restart">重開</button>
         </div>
@@ -42,8 +43,32 @@
 
         <aside class="game-panel" aria-label="分數與狀態">
           <div class="next-card">
-            <span>下一顆</span>
-            <canvas id="nextBoard" width="120" height="120" aria-label="下一顆方塊預覽"></canvas>
+            <div class="next-heading">
+              <span>後續方塊</span>
+              <small data-preview-status>Lv.1 顯示 1 顆</small>
+            </div>
+            <div class="next-stack" aria-label="後續方塊預覽">
+              <div class="next-slot">
+                <canvas width="92" height="92" aria-label="後續第 1 顆方塊" data-preview-canvas></canvas>
+                <small>1</small>
+              </div>
+              <div class="next-slot">
+                <canvas width="92" height="92" aria-label="後續第 2 顆方塊" data-preview-canvas></canvas>
+                <small>2</small>
+              </div>
+              <div class="next-slot">
+                <canvas width="92" height="92" aria-label="後續第 3 顆方塊" data-preview-canvas></canvas>
+                <small>3</small>
+              </div>
+              <div class="next-slot">
+                <canvas width="92" height="92" aria-label="後續第 4 顆方塊" data-preview-canvas></canvas>
+                <small>4</small>
+              </div>
+              <div class="next-slot">
+                <canvas width="92" height="92" aria-label="後續第 5 顆方塊" data-preview-canvas></canvas>
+                <small>5</small>
+              </div>
+            </div>
           </div>
 
           <div class="score-grid">
@@ -67,8 +92,8 @@
 
           <div class="help-card">
             <h2>操作</h2>
-            <p>鍵盤：左右移動、上鍵旋轉、下鍵加速、空白鍵硬降、P 暫停。</p>
-            <p>手機：使用下方觸控按鈕移動、旋轉與落下。</p>
+            <p>鍵盤：左右移動、上鍵旋轉、下鍵加速、空白鍵硬降、C 換下顆、P 暫停。</p>
+            <p>手機：可用手勢，也可使用下方觸控按鈕。</p>
           </div>
         </aside>
       </section>
@@ -78,6 +103,7 @@
         <button type="button" data-control="rotate">旋轉</button>
         <button type="button" data-control="right">右</button>
         <button type="button" data-control="down">加速</button>
+        <button type="button" data-control="swap">換下顆</button>
         <button type="button" data-control="drop">落下</button>
       </section>
 
@@ -99,8 +125,12 @@
               <span>把目前方塊快速落到最下方。</span>
             </div>
             <div>
-              <strong>保留按鈕</strong>
-              <span>下方方向鍵仍可操作，也可切換手勢開關。</span>
+              <strong>換下顆</strong>
+              <span>每一顆方塊落下期間，可以和下一顆方塊交換一次。</span>
+            </div>
+            <div>
+              <strong>後續預覽</strong>
+              <span>等級越高，最多可看到後面 5 顆方塊。</span>
             </div>
           </div>
           <p class="instruction-note">遊戲畫面已鎖定滑動與放大，方便單手操作。</p>
