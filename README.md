@@ -1,11 +1,11 @@
-# 微光俄羅斯方塊
+# 微光小遊戲
 
 可被 TSY 微光創作室入口網站連接的獨立靜態小遊戲專案。
 
 - 入口網站：https://tsy3991.github.io/TSY.Microglow-Website/
-- GitHub Pages repo name：`microglow-tetris`
-- 小遊戲大廳：https://tsy3991.github.io/microglow-tetris/
-- 俄羅斯方塊：https://tsy3991.github.io/microglow-tetris/games/tetris/
+- GitHub Pages repo name：`TSY.Microglow-Games`
+- 小遊戲大廳：https://tsy3991.github.io/TSY.Microglow-Games/
+- 俄羅斯方塊：https://tsy3991.github.io/TSY.Microglow-Games/games/tetris/
 - metadata：`portal-game.json`
 
 ## Structure
@@ -26,6 +26,7 @@ Games/
 ## Current Games
 
 - `games/tetris/`: 霓虹方塊俄羅斯，支援鍵盤、手機觸控、本機最高分、下一顆預覽、等級、暫停與音效切換。
+- `games/snake/`: 後續新增貪吃蛇時放在這個路徑。
 
 ## Portal Integration
 
