@@ -457,6 +457,109 @@ p {
   box-shadow: 0 0 12px rgba(255, 232, 179, 0.8);
 }
 
+.gem-preview {
+  background:
+    linear-gradient(90deg, rgba(47, 215, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(rgba(255, 94, 188, 0.1) 1px, transparent 1px),
+    linear-gradient(135deg, #071219, #0b3136 58%, #30204a);
+  background-size: 19px 19px, 19px 19px, auto;
+  box-shadow:
+    inset 0 0 0 1px rgba(47, 215, 255, 0.18),
+    inset 0 0 34px rgba(255, 94, 188, 0.12);
+}
+
+.gem-preview::before {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 36%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: auto, 19px 19px, 19px 19px;
+}
+
+.gem-preview::after {
+  position: absolute;
+  inset: 20px 24px auto auto;
+  width: 48px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--cyan), var(--yellow), var(--pink));
+  box-shadow: 0 0 18px rgba(255, 216, 77, 0.48);
+  content: "";
+}
+
+.gem-preview span {
+  position: absolute;
+  z-index: 1;
+  width: 30px;
+  height: 30px;
+  clip-path: polygon(50% 0, 88% 24%, 88% 76%, 50% 100%, 12% 76%, 12% 24%);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.78), transparent 23%),
+    var(--teal);
+  box-shadow:
+    0 0 14px currentColor,
+    inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.gem-preview span:nth-child(1) {
+  top: 46px;
+  left: 40px;
+  color: var(--teal);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.78), transparent 23%),
+    var(--teal);
+}
+
+.gem-preview span:nth-child(2) {
+  top: 46px;
+  left: 80px;
+  color: var(--pink);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.74), transparent 24%),
+    var(--pink);
+}
+
+.gem-preview span:nth-child(3) {
+  top: 46px;
+  left: 120px;
+  color: var(--yellow);
+  clip-path: polygon(24% 0, 76% 0, 100% 50%, 76% 100%, 24% 100%, 0 50%);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.72), transparent 24%),
+    var(--yellow);
+}
+
+.gem-preview span:nth-child(4) {
+  top: 92px;
+  left: 40px;
+  color: #9b6bff;
+  clip-path: polygon(50% 0, 100% 34%, 82% 100%, 18% 100%, 0 34%);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.74), transparent 24%),
+    #9b6bff;
+}
+
+.gem-preview span:nth-child(5) {
+  top: 92px;
+  left: 80px;
+  color: var(--cyan);
+  clip-path: polygon(28% 0, 72% 0, 100% 30%, 82% 90%, 50% 100%, 18% 90%, 0 30%);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.78), transparent 24%),
+    var(--cyan);
+}
+
+.gem-preview span:nth-child(6) {
+  top: 92px;
+  left: 120px;
+  color: #ff9a3d;
+  clip-path: polygon(50% 0, 78% 18%, 100% 50%, 78% 82%, 50% 100%, 22% 82%, 0 50%, 22% 18%);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.74), transparent 24%),
+    #ff9a3d;
+}
+
 .muted-thumb {
   background: #ecf5f2;
 }

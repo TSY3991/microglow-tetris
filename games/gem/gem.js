@@ -567,15 +567,17 @@
   function spawnBurst(x, y, color, count) {
     for (let i = 0; i < count; i += 1) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 60 + Math.random() * 140;
+      const speed = 80 + Math.random() * 190;
       particles.push({
         x, y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         color,
         life: 0,
-        maxLife: 0.55 + Math.random() * 0.3,
-        size: 2 + Math.random() * 3
+        maxLife: 0.62 + Math.random() * 0.34,
+        size: 2.2 + Math.random() * 3.8,
+        trail: 10 + Math.random() * 18,
+        twinkle: Math.random() * Math.PI * 2
       });
     }
   }
@@ -602,10 +604,27 @@
     const w = boardCanvas.width;
     const h = boardCanvas.height;
     context.clearRect(0, 0, w, h);
-    // Background
-    context.fillStyle = "#0b2328";
+    // Glass board background
+    const boardGlow = context.createRadialGradient(w * 0.28, h * 0.18, 20, w * 0.5, h * 0.45, w * 0.85);
+    boardGlow.addColorStop(0, "rgba(47, 215, 255, 0.18)");
+    boardGlow.addColorStop(0.45, "rgba(13, 148, 136, 0.11)");
+    boardGlow.addColorStop(1, "rgba(6, 18, 24, 0.98)");
+    context.fillStyle = boardGlow;
     context.fillRect(0, 0, w, h);
-    context.strokeStyle = "rgba(255,255,255,0.05)";
+    context.save();
+    context.globalAlpha = 0.62;
+    context.fillStyle = "rgba(255,255,255,0.035)";
+    for (let r = 0; r < ROWS; r += 1) {
+      for (let c = 0; c < COLS; c += 1) {
+        if ((r + c) % 2 === 0) context.fillRect(c * CELL + 2, r * CELL + 2, CELL - 4, CELL - 4);
+      }
+    }
+    context.restore();
+    context.save();
+    context.shadowColor = "rgba(47, 215, 255, 0.55)";
+    context.shadowBlur = 12;
+    context.strokeStyle = "rgba(147, 244, 255, 0.13)";
+    context.lineWidth = 1;
     for (let i = 0; i <= COLS; i += 1) {
       context.beginPath();
       context.moveTo(i * CELL, 0);
@@ -618,6 +637,7 @@
       context.lineTo(w, i * CELL);
       context.stroke();
     }
+    context.restore();
     // Hint highlight
     const blinkPhase = (Math.floor(performance.now() / 200) % 2 === 0);
     const showHint = hintPair && performance.now() < hintBlinkUntil && blinkPhase;
@@ -637,67 +657,284 @@
     // Particles
     for (const p of particles) {
       const alpha = 1 - p.life / p.maxLife;
-      context.globalAlpha = Math.max(0, alpha);
-      context.fillStyle = p.color;
+      const liveAlpha = Math.max(0, alpha);
+      const trailGradient = context.createLinearGradient(p.x - p.vx * 0.035, p.y - p.vy * 0.035, p.x, p.y);
+      trailGradient.addColorStop(0, "rgba(255,255,255,0)");
+      trailGradient.addColorStop(0.35, p.color);
+      trailGradient.addColorStop(1, "#ffffff");
+      context.save();
+      context.globalAlpha = liveAlpha * 0.58;
+      context.strokeStyle = trailGradient;
+      context.lineWidth = Math.max(1, p.size * 0.72);
+      context.lineCap = "round";
+      context.shadowColor = p.color;
+      context.shadowBlur = 13;
       context.beginPath();
-      context.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      context.moveTo(p.x - p.vx * 0.006 * p.trail, p.y - p.vy * 0.006 * p.trail);
+      context.lineTo(p.x, p.y);
+      context.stroke();
+      context.globalAlpha = liveAlpha;
+      context.fillStyle = "#ffffff";
+      context.beginPath();
+      context.arc(p.x, p.y, p.size * (0.75 + Math.sin(p.life * 16 + p.twinkle) * 0.18), 0, Math.PI * 2);
       context.fill();
+      context.restore();
     }
     context.globalAlpha = 1;
     // Chain popups
     for (const popup of chainPopups) {
       const t = popup.life / popup.maxLife;
-      context.globalAlpha = Math.max(0, 1 - t);
-      context.fillStyle = "#ffd84d";
-      context.font = "bold 22px 'Noto Sans TC', sans-serif";
+      const alpha = Math.max(0, 1 - t);
+      const y = popup.y - t * 48;
+      const scale = 0.82 + Math.sin(Math.min(1, t) * Math.PI) * 0.34 + t * 0.18;
+      const gradient = context.createLinearGradient(popup.x - 66, y - 16, popup.x + 66, y + 16);
+      gradient.addColorStop(0, "#2fd7ff");
+      gradient.addColorStop(0.28, "#8df45f");
+      gradient.addColorStop(0.54, "#ffd84d");
+      gradient.addColorStop(0.78, "#ff5ebc");
+      gradient.addColorStop(1, "#9b6bff");
+      context.save();
+      context.globalAlpha = alpha;
+      context.translate(popup.x, y);
+      context.scale(scale, scale);
+      context.shadowColor = "rgba(255, 216, 77, 0.9)";
+      context.shadowBlur = 18;
+      context.lineWidth = 4;
+      context.strokeStyle = "rgba(5, 18, 24, 0.72)";
+      context.font = "900 23px 'Noto Sans TC', 'Microsoft JhengHei', sans-serif";
       context.textAlign = "center";
       context.textBaseline = "middle";
-      context.fillText(popup.text, popup.x, popup.y - t * 26);
+      context.strokeText(popup.text, 0, 0);
+      context.fillStyle = gradient;
+      context.fillText(popup.text, 0, 0);
+      context.restore();
     }
     context.globalAlpha = 1;
   }
 
   function drawGem(x, y, gem, selected, cursor, hint) {
     const color = COLORS[gem.color] || COLORS[0];
-    const r = CELL * 0.36;
-    // Glow
-    context.save();
-    if (selected || hint) {
-      context.shadowColor = "#ffffff";
-      context.shadowBlur = 22;
-    } else {
-      context.shadowColor = color.glow;
-      context.shadowBlur = 14;
-    }
-    context.fillStyle = color.fill;
-    if (gem.special === SPECIAL_LINE_H) {
-      context.fillRect(x - CELL * 0.42, y - r * 0.7, CELL * 0.84, r * 1.4);
-    } else if (gem.special === SPECIAL_LINE_V) {
-      context.fillRect(x - r * 0.7, y - CELL * 0.42, r * 1.4, CELL * 0.84);
-    } else if (gem.special === SPECIAL_COLOR_BOMB) {
-      context.fillStyle = "#ffffff";
+    const r = CELL * 0.34;
+    const now = performance.now();
+    const pulse = 0.5 + Math.sin(now / 150) * 0.5;
+    const phase = now / 480;
+    const shapeId = gem.color % 6;
+
+    function makeGemPath(radius, inset = 0) {
+      const rr = radius - inset;
       context.beginPath();
-      context.arc(x, y, r, 0, Math.PI * 2);
+      if (shapeId === 0) {
+        context.moveTo(x, y - rr);
+        context.lineTo(x + rr * 0.82, y - rr * 0.46);
+        context.lineTo(x + rr * 0.82, y + rr * 0.46);
+        context.lineTo(x, y + rr);
+        context.lineTo(x - rr * 0.82, y + rr * 0.46);
+        context.lineTo(x - rr * 0.82, y - rr * 0.46);
+      } else if (shapeId === 1) {
+        context.moveTo(x, y - rr * 1.05);
+        context.lineTo(x + rr * 0.86, y);
+        context.lineTo(x, y + rr * 1.05);
+        context.lineTo(x - rr * 0.86, y);
+      } else if (shapeId === 2) {
+        context.moveTo(x - rr * 0.62, y - rr * 0.8);
+        context.lineTo(x + rr * 0.62, y - rr * 0.8);
+        context.lineTo(x + rr, y);
+        context.lineTo(x + rr * 0.62, y + rr * 0.8);
+        context.lineTo(x - rr * 0.62, y + rr * 0.8);
+        context.lineTo(x - rr, y);
+      } else if (shapeId === 3) {
+        context.moveTo(x, y - rr * 1.08);
+        context.lineTo(x + rr * 0.95, y - rr * 0.18);
+        context.lineTo(x + rr * 0.48, y + rr);
+        context.lineTo(x - rr * 0.48, y + rr);
+        context.lineTo(x - rr * 0.95, y - rr * 0.18);
+      } else if (shapeId === 4) {
+        context.moveTo(x - rr * 0.5, y - rr);
+        context.lineTo(x + rr * 0.5, y - rr);
+        context.lineTo(x + rr, y - rr * 0.2);
+        context.lineTo(x + rr * 0.72, y + rr * 0.86);
+        context.lineTo(x, y + rr * 1.08);
+        context.lineTo(x - rr * 0.72, y + rr * 0.86);
+        context.lineTo(x - rr, y - rr * 0.2);
+      } else {
+        context.moveTo(x, y - rr);
+        context.lineTo(x + rr * 0.72, y - rr * 0.72);
+        context.lineTo(x + rr, y);
+        context.lineTo(x + rr * 0.72, y + rr * 0.72);
+        context.lineTo(x, y + rr);
+        context.lineTo(x - rr * 0.72, y + rr * 0.72);
+        context.lineTo(x - rr, y);
+        context.lineTo(x - rr * 0.72, y - rr * 0.72);
+      }
+      context.closePath();
+    }
+
+    function drawFacets(radius) {
+      context.save();
+      makeGemPath(radius, 1);
+      context.clip();
+      context.strokeStyle = "rgba(255,255,255,0.42)";
+      context.lineWidth = 1.4;
+      context.beginPath();
+      context.moveTo(x, y - radius * 0.92);
+      context.lineTo(x, y + radius * 0.92);
+      context.moveTo(x - radius * 0.78, y - radius * 0.18);
+      context.lineTo(x + radius * 0.78, y - radius * 0.18);
+      context.moveTo(x - radius * 0.58, y + radius * 0.54);
+      context.lineTo(x + radius * 0.58, y + radius * 0.54);
+      if (shapeId % 2 === 0) {
+        context.moveTo(x - radius * 0.7, y - radius * 0.58);
+        context.lineTo(x + radius * 0.66, y + radius * 0.66);
+      } else {
+        context.moveTo(x + radius * 0.7, y - radius * 0.58);
+        context.lineTo(x - radius * 0.66, y + radius * 0.66);
+      }
+      context.stroke();
+      context.restore();
+    }
+
+    context.save();
+    if (selected || hint || cursor) {
+      const ringRadius = r + 7 + pulse * 5;
+      context.strokeStyle = selected
+        ? `rgba(255,255,255,${0.58 + pulse * 0.32})`
+        : `rgba(47,215,255,${0.46 + pulse * 0.28})`;
+      context.lineWidth = selected ? 3.2 : 2.2;
+      context.shadowColor = selected ? "rgba(255,255,255,0.9)" : "rgba(47,215,255,0.85)";
+      context.shadowBlur = 16 + pulse * 12;
+      context.beginPath();
+      context.arc(x, y, ringRadius, 0, Math.PI * 2);
+      context.stroke();
+    }
+
+    if (gem.special === SPECIAL_COLOR_BOMB) {
+      context.translate(x, y);
+      context.rotate(phase * 0.9);
+      const rainbow = ["#2fd7ff", "#8df45f", "#ffd84d", "#ff9a3d", "#ff5ebc", "#9b6bff"];
+      for (let i = 0; i < 12; i += 1) {
+        context.rotate(Math.PI / 6);
+        context.fillStyle = rainbow[i % rainbow.length];
+        context.shadowColor = rainbow[i % rainbow.length];
+        context.shadowBlur = 16;
+        context.beginPath();
+        context.moveTo(0, -r * 1.35);
+        context.lineTo(r * 0.16, -r * 0.35);
+        context.lineTo(0, -r * 0.08);
+        context.lineTo(-r * 0.16, -r * 0.35);
+        context.closePath();
+        context.fill();
+      }
+      const bombGlow = context.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
+      bombGlow.addColorStop(0, "#ffffff");
+      bombGlow.addColorStop(0.42, "#fff8bd");
+      bombGlow.addColorStop(1, "rgba(47,215,255,0.76)");
+      context.shadowColor = "#ffffff";
+      context.shadowBlur = 18;
+      context.fillStyle = bombGlow;
+      context.beginPath();
+      context.arc(0, 0, r * 0.72, 0, Math.PI * 2);
       context.fill();
-      // Inner ring
-      context.strokeStyle = "rgba(0,0,0,0.5)";
+      context.strokeStyle = "rgba(255,255,255,0.82)";
       context.lineWidth = 2;
       context.beginPath();
-      context.arc(x, y, r * 0.6, 0, Math.PI * 2);
+      context.arc(0, 0, r * 0.43, 0, Math.PI * 2);
       context.stroke();
+      context.restore();
+      return;
+    }
+
+    context.shadowColor = color.glow;
+    context.shadowBlur = 16;
+    makeGemPath(r);
+    const fill = context.createLinearGradient(x - r, y - r, x + r, y + r);
+    fill.addColorStop(0, "#ffffff");
+    fill.addColorStop(0.16, color.fill);
+    fill.addColorStop(0.58, color.fill);
+    fill.addColorStop(1, "rgba(5,18,24,0.72)");
+    context.fillStyle = fill;
+    context.fill();
+    context.strokeStyle = "rgba(255,255,255,0.5)";
+    context.lineWidth = 1.6;
+    context.stroke();
+    drawFacets(r);
+
+    context.save();
+    makeGemPath(r, 2);
+    context.clip();
+    context.fillStyle = "rgba(255,255,255,0.68)";
+    context.beginPath();
+    context.ellipse(x - r * 0.28, y - r * 0.34, r * 0.28, r * 0.12, -0.6, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+
+    context.strokeStyle = "rgba(5,18,24,0.58)";
+    context.lineWidth = 2;
+    if (shapeId === 0) {
+      context.beginPath();
+      context.arc(x, y, r * 0.32, 0, Math.PI * 2);
+      context.stroke();
+    } else if (shapeId === 1) {
+      context.beginPath();
+      context.moveTo(x, y - r * 0.5);
+      context.lineTo(x + r * 0.42, y);
+      context.lineTo(x, y + r * 0.5);
+      context.lineTo(x - r * 0.42, y);
+      context.closePath();
+      context.stroke();
+    } else if (shapeId === 2) {
+      context.beginPath();
+      context.moveTo(x - r * 0.44, y);
+      context.lineTo(x + r * 0.44, y);
+      context.moveTo(x, y - r * 0.44);
+      context.lineTo(x, y + r * 0.44);
+      context.stroke();
+    } else if (shapeId === 3) {
+      context.beginPath();
+      context.moveTo(x, y - r * 0.56);
+      context.lineTo(x + r * 0.48, y + r * 0.38);
+      context.lineTo(x - r * 0.48, y + r * 0.38);
+      context.closePath();
+      context.stroke();
+    } else if (shapeId === 4) {
+      context.beginPath();
+      context.arc(x, y, r * 0.42, 0, Math.PI * 2);
+      context.stroke();
+      context.beginPath();
+      context.arc(x, y, r * 0.16, 0, Math.PI * 2);
+      context.fillStyle = "rgba(5,18,24,0.5)";
+      context.fill();
     } else {
       context.beginPath();
-      context.arc(x, y, r, 0, Math.PI * 2);
-      context.fill();
+      context.moveTo(x - r * 0.42, y - r * 0.42);
+      context.lineTo(x + r * 0.42, y + r * 0.42);
+      context.moveTo(x + r * 0.42, y - r * 0.42);
+      context.lineTo(x - r * 0.42, y + r * 0.42);
+      context.stroke();
+    }
+
+    if (gem.special === SPECIAL_LINE_H || gem.special === SPECIAL_LINE_V) {
+      const horizontal = gem.special === SPECIAL_LINE_H;
+      context.save();
+      context.translate(x, y);
+      if (!horizontal) context.rotate(Math.PI / 2);
+      context.shadowColor = "#ffffff";
+      context.shadowBlur = 10;
+      context.fillStyle = "rgba(255,255,255,0.86)";
+      for (let i = -1; i <= 1; i += 1) {
+        context.beginPath();
+        context.moveTo(-r * 0.66 + i * r * 0.32, -r * 0.26);
+        context.lineTo(-r * 0.32 + i * r * 0.32, 0);
+        context.lineTo(-r * 0.66 + i * r * 0.32, r * 0.26);
+        context.lineTo(-r * 0.5 + i * r * 0.32, 0);
+        context.closePath();
+        context.fill();
+      }
+      context.fillStyle = "rgba(5,18,24,0.42)";
+      context.fillRect(-r * 0.62, -2, r * 1.24, 4);
+      context.restore();
     }
     context.restore();
-    if (selected) {
-      context.strokeStyle = "#ffffff";
-      context.lineWidth = 3;
-      context.beginPath();
-      context.arc(x, y, r + 4, 0, Math.PI * 2);
-      context.stroke();
-    } else if (cursor) {
+    if (cursor) {
       context.strokeStyle = "rgba(255,255,255,0.7)";
       context.lineWidth = 2;
       context.setLineDash([4, 4]);
