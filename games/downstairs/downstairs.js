@@ -11,6 +11,7 @@
   const targetProgressEl = document.querySelector("[data-target-progress]");
   const playsEl = document.querySelector("[data-plays]");
   const gameShell = document.querySelector(".downstairs-shell");
+  const touchControls = document.querySelector(".touch-controls");
   const instructionModal = document.querySelector("[data-instruction-modal]");
   const gameId = "microglow-downstairs";
   const gameTitle = "小朋友下樓梯";
@@ -685,6 +686,33 @@
     keys.right = false;
   }
 
+  function preventDefaultTouch(event) {
+    event.preventDefault();
+  }
+
+  function firstTouch(event) {
+    return event.changedTouches?.[0] || event.touches?.[0] || null;
+  }
+
+  function handleControlPress(control) {
+    if (!running) startGame();
+    if (control === "left") keys.left = true;
+    if (control === "right") keys.right = true;
+    if (control === "drop") keys.drop = true;
+  }
+
+  function handleControlRelease(control) {
+    if (control === "left") keys.left = false;
+    if (control === "right") keys.right = false;
+    if (control === "drop") keys.drop = false;
+  }
+
+  function blockPageZoom(event) {
+    if (event.touches && event.touches.length > 1) {
+      event.preventDefault();
+    }
+  }
+
   document.addEventListener("keydown", (event) => {
     if (isInstructionOpen()) {
       if (event.key === "Enter" || isSpaceKey(event.key)) {
@@ -745,18 +773,25 @@
     const control = button.dataset.control;
     button.addEventListener("pointerdown", (event) => {
       event.preventDefault();
-      if (!running) startGame();
-      if (control === "left") keys.left = true;
-      if (control === "right") keys.right = true;
-      if (control === "drop") keys.drop = true;
+      handleControlPress(control);
     }, { passive: false });
 
     ["pointerup", "pointercancel", "pointerleave"].forEach((eventName) => {
       button.addEventListener(eventName, () => {
-        if (control === "left") keys.left = false;
-        if (control === "right") keys.right = false;
-        if (control === "drop") keys.drop = false;
+        handleControlRelease(control);
       });
+    });
+
+    button.addEventListener("touchstart", (event) => {
+      event.preventDefault();
+      handleControlPress(control);
+    }, { passive: false });
+
+    ["touchend", "touchcancel"].forEach((eventName) => {
+      button.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        handleControlRelease(control);
+      }, { passive: false });
     });
   });
 
@@ -795,6 +830,35 @@
 
   boardCanvas.addEventListener("pointercancel", releasePointerSide);
 
+  boardCanvas.addEventListener("touchstart", (event) => {
+    event.preventDefault();
+    const touch = firstTouch(event);
+    if (!touch || paused || !running) return;
+    setPointerSide(touch.clientX);
+  }, { passive: false });
+
+  boardCanvas.addEventListener("touchmove", (event) => {
+    event.preventDefault();
+    const touch = firstTouch(event);
+    if (!touch || !activePointerSide) return;
+    if (paused || !running) {
+      releasePointerSide();
+      return;
+    }
+    setPointerSide(touch.clientX);
+  }, { passive: false });
+
+  ["touchend", "touchcancel"].forEach((eventName) => {
+    boardCanvas.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      releasePointerSide();
+    }, { passive: false });
+  });
+
+  document.addEventListener("touchstart", blockPageZoom, { passive: false, capture: true });
+  document.addEventListener("touchmove", blockPageZoom, { passive: false, capture: true });
+  touchControls?.addEventListener("touchmove", preventDefaultTouch, { passive: false });
+
   gameShell?.addEventListener("touchmove", (event) => {
     event.preventDefault();
   }, { passive: false });
@@ -809,6 +873,9 @@
 
   ["gesturestart", "gesturechange", "gestureend"].forEach((eventName) => {
     document.addEventListener(eventName, (event) => {
+      event.preventDefault();
+    }, { passive: false });
+    window.addEventListener(eventName, (event) => {
       event.preventDefault();
     }, { passive: false });
   });

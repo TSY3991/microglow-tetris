@@ -1,3 +1,10 @@
+html {
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 body {
   background:
     linear-gradient(90deg, rgba(47, 215, 255, 0.08) 1px, transparent 1px),
@@ -10,6 +17,12 @@ body {
   user-select: none;
   -webkit-user-select: none;
   -webkit-text-size-adjust: 100%;
+}
+
+a,
+button,
+canvas {
+  -webkit-tap-highlight-color: transparent;
 }
 
 .downstairs-shell {
