@@ -7,6 +7,8 @@
   const scoreEl = document.querySelector("[data-score]");
   const bestEl = document.querySelector("[data-best]");
   const floorEl = document.querySelector("[data-floor]");
+  const floorProgressEl = document.querySelector("[data-floor-progress]");
+  const targetProgressEl = document.querySelector("[data-target-progress]");
   const playsEl = document.querySelector("[data-plays]");
   const gameShell = document.querySelector(".downstairs-shell");
   const instructionModal = document.querySelector("[data-instruction-modal]");
@@ -22,12 +24,14 @@
   const moveSpeed = 210;
   const maxFallSpeed = 470;
   const platformGap = 72;
+  const targetFloor = 100;
 
   let player = null;
   let platforms = [];
   let stars = [];
   let particles = [];
   let score = 0;
+  ensurePortalStats();
   let best = readBestScore();
   let plays = readPlays();
   let floor = 0;
@@ -41,6 +45,7 @@
   let nextPlatformY = 0;
   let keys = { left: false, right: false, drop: false };
   let activePointerSide = null;
+  let targetAnnounced = false;
   let lastTouchEnd = 0;
 
   resetState();
@@ -54,6 +59,7 @@
     scrollSpeed = 46;
     paused = false;
     recordedThisRun = false;
+    targetAnnounced = false;
     activePointerSide = null;
     keys = { left: false, right: false, drop: false };
     const startPlatformY = 360;
@@ -120,6 +126,7 @@
       updateParticles(delta);
       removeOldObjects();
       ensurePlatforms();
+      checkTargetReached();
       checkGameOver();
       updateUi();
       draw();
@@ -279,6 +286,14 @@
     }
   }
 
+  function checkTargetReached() {
+    if (targetAnnounced || floor < targetFloor) return;
+    targetAnnounced = true;
+    spawnParticles(player.x, player.y, "#8df45f", 24);
+    showOverlay("達成 100 層", "你已完成 100 層挑戰，可以按繼續往更深樓層前進。", "繼續挑戰");
+    paused = true;
+  }
+
   function endGame(title, message) {
     if (recordedThisRun) return;
     recordedThisRun = true;
@@ -301,6 +316,10 @@
 
     paused = !paused;
     if (paused) {
+      releasePointerSide();
+      keys.left = false;
+      keys.right = false;
+      keys.drop = false;
       showOverlay("已暫停", "按空白鍵、繼續或開始按鈕回到遊戲", "繼續遊戲");
     } else {
       hideOverlay();
@@ -339,6 +358,7 @@
     drawPlatforms();
     drawPlayer();
     drawParticles();
+    drawProgressHud();
   }
 
   function drawBackground() {
@@ -457,6 +477,22 @@
     });
   }
 
+  function drawProgressHud() {
+    const progress = Math.min(1, floor / targetFloor);
+    context.fillStyle = "rgba(4, 14, 20, 0.5)";
+    roundRect(12, 12, 138, 32, 8);
+    context.fill();
+    context.fillStyle = "rgba(255, 255, 255, 0.28)";
+    roundRect(24, 36, 102, 5, 3);
+    context.fill();
+    context.fillStyle = "#ffd84d";
+    roundRect(24, 36, 102 * progress, 5, 3);
+    context.fill();
+    context.fillStyle = "#ffffff";
+    context.font = "900 13px Microsoft JhengHei, sans-serif";
+    context.fillText(`100 層 ${floor}/${targetFloor}`, 24, 29);
+  }
+
   function roundRect(x, y, rectWidth, rectHeight, radius) {
     context.beginPath();
     context.moveTo(x + radius, y);
@@ -475,6 +511,8 @@
     scoreEl.textContent = String(score);
     bestEl.textContent = String(best);
     floorEl.textContent = String(floor);
+    floorProgressEl.textContent = String(floor);
+    targetProgressEl.style.width = `${Math.min(100, floor)}%`;
     playsEl.textContent = String(plays);
   }
 
@@ -500,6 +538,27 @@
 
   function readPlays() {
     return Number(readGameStats().plays) || 0;
+  }
+
+  function ensurePortalStats() {
+    const stats = readPortalStats();
+    const games = stats.games && typeof stats.games === "object" ? { ...stats.games } : {};
+    const existing = games[gameId] && typeof games[gameId] === "object" ? games[gameId] : null;
+    if (existing && existing.title === gameTitle && "bestScore" in existing && "lastScore" in existing && "plays" in existing) {
+      return;
+    }
+    games[gameId] = {
+      title: gameTitle,
+      bestScore: Number(existing?.bestScore) || 0,
+      lastScore: Number(existing?.lastScore) || 0,
+      plays: Number(existing?.plays) || 0,
+      updatedAt: existing?.updatedAt || new Date().toISOString()
+    };
+    try {
+      window.localStorage.setItem(portalStatsKey, JSON.stringify({ ...stats, games }));
+    } catch {
+      // Ignore private-mode storage failures.
+    }
   }
 
   function writePortalStats(lastScore, bestScore) {
@@ -658,6 +717,7 @@
 
   boardCanvas.addEventListener("pointerdown", (event) => {
     event.preventDefault();
+    if (paused || !running) return;
     setPointerSide(event.clientX);
     try {
       boardCanvas.setPointerCapture?.(event.pointerId);
@@ -668,6 +728,12 @@
 
   boardCanvas.addEventListener("pointermove", (event) => {
     if (!activePointerSide) return;
+    if (paused || !running) {
+      releasePointerSide();
+      keys.left = false;
+      keys.right = false;
+      return;
+    }
     event.preventDefault();
     setPointerSide(event.clientX);
   }, { passive: false });
@@ -700,5 +766,12 @@
     document.addEventListener(eventName, (event) => {
       event.preventDefault();
     }, { passive: false });
+  });
+
+  window.addEventListener("pagehide", () => {
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = 0;
+    }
   });
 })();

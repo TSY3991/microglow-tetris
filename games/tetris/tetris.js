@@ -18,7 +18,6 @@
   const storage = window.MicroglowStorage;
   const gameId = "microglow-tetris";
   const gameTitle = "微光俄羅斯方塊";
-  const bestKey = "tetris.bestScore.v1";
   const gestureKey = "tetris.gesturesEnabled.v1";
   const portalStatsKey = "tsyMicroglowPortal.gameStats.v1";
   let lastTouchStart = 0;
@@ -362,7 +361,6 @@
       animationFrameId = 0;
     }
     best = Math.max(best, score);
-    storage?.write(bestKey, best);
     writePortalStats(score, best);
     updateUi();
     draw();
@@ -518,9 +516,7 @@
   }
 
   function readBestScore() {
-    const portalBest = Number(readPortalStats().games?.[gameId]?.bestScore) || 0;
-    const legacyBest = storage?.number(bestKey, 0) || 0;
-    return Math.max(portalBest, legacyBest);
+    return Number(readPortalStats().games?.[gameId]?.bestScore) || 0;
   }
 
   function showOverlay(title, message, buttonText) {
@@ -783,6 +779,10 @@
 
   boardCanvas.addEventListener("pointermove", (event) => {
     if (!gesturesOn || !gestureStart) return;
+    if (paused || !running) {
+      gestureStart = null;
+      return;
+    }
     event.preventDefault();
     handleBoardGestureMove(event);
   }, { passive: false });
@@ -843,5 +843,12 @@
     document.addEventListener(eventName, (event) => {
       event.preventDefault();
     }, { passive: false });
+  });
+
+  window.addEventListener("pagehide", () => {
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = 0;
+    }
   });
 })();

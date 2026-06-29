@@ -19,7 +19,7 @@
           <a class="portal-return" href="https://tsy3991.github.io/TSY.Microglow-Website/" data-portal-return>返回入口網站</a>
         </nav>
         <div>
-          <p class="eyebrow">Tiny Stairs</p>
+          <p class="eyebrow">100 Floor Challenge</p>
           <h1>小朋友下樓梯</h1>
         </div>
         <div class="top-actions" aria-label="遊戲控制">
@@ -35,7 +35,7 @@
           <canvas id="downstairsBoard" width="360" height="560" aria-label="下樓梯主遊戲區"></canvas>
           <div class="game-overlay" data-overlay>
             <strong data-overlay-title>準備開始</strong>
-            <span data-overlay-message>左右移動，找到下一層樓梯往下走</span>
+            <span data-overlay-message>左右移動，挑戰下到 100 層</span>
             <button type="button" data-action="overlay-start">開始遊戲</button>
           </div>
         </div>
@@ -60,6 +60,17 @@
             </div>
           </div>
 
+          <div class="challenge-card" aria-label="100 層挑戰進度">
+            <div class="challenge-heading">
+              <span>100 層挑戰</span>
+              <strong><b data-floor-progress>0</b> / 100</strong>
+            </div>
+            <div class="target-track" aria-hidden="true">
+              <span data-target-progress></span>
+            </div>
+            <p>下到第 100 層完成挑戰，之後可以繼續往更深樓層衝高分。</p>
+          </div>
+
           <div class="help-card">
             <h2>操作</h2>
             <p>桌機：方向鍵或 A / D 左右移動，向下鍵或 S 可以直接穿過目前樓梯，空白鍵暫停。</p>
@@ -77,7 +88,7 @@
       <div class="instruction-modal" role="dialog" aria-modal="true" aria-labelledby="instruction-title" data-instruction-modal>
         <div class="instruction-card">
           <p class="instruction-kicker">遊玩方式</p>
-          <h2 id="instruction-title">一路往下，不要被畫面頂到</h2>
+          <h2 id="instruction-title">挑戰下到 100 層</h2>
           <div class="instruction-list">
             <div>
               <strong>左右移動</strong>
@@ -92,11 +103,15 @@
               <span>不要被平台推到畫面最上方，也不要掉出畫面底部。</span>
             </div>
             <div>
+              <strong>100 層挑戰</strong>
+              <span>先以下到第 100 層為目標；達成後遊戲會提示你，還能繼續往更深樓層挑戰。</span>
+            </div>
+            <div>
               <strong>加分方式</strong>
               <span>每往下一層會加分，吃到星星可以再加分。</span>
             </div>
           </div>
-          <p class="instruction-note">遊戲速度會隨分數慢慢提升，適合反覆挑戰最高分。</p>
+          <p class="instruction-note">參考經典下樓梯玩法節奏，保留微光版的星星加分與手機按鈕。</p>
           <div class="instruction-actions">
             <button type="button" data-instruction-start>開始遊戲</button>
             <button type="button" data-instruction-close>先看看</button>
@@ -106,6 +121,7 @@
     </main>
 
     <script src="../../shared/portal-return.js"></script>
+    <script src="../../shared/storage.js"></script>
     <script src="./downstairs.js?v=20260629d"></script>
   </body>
 </html>

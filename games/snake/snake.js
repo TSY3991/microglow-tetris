@@ -49,6 +49,7 @@
   let targetAngle = 0;
   let targetPoint = null;
   let score = 0;
+  ensurePortalStats();
   let best = readBestScore();
   let plays = readPlays();
   let targetLength = 210;
@@ -247,7 +248,12 @@
       };
       if (directDistanceBetween(food, head) > 72) return food;
     }
-    return food;
+    return {
+      x: head.x > boardSize / 2 ? 32 : boardSize - 32,
+      y: head.y > boardSize / 2 ? 32 : boardSize - 32,
+      color: palette[Math.floor(Math.random() * palette.length)],
+      pulse: Math.random() * Math.PI * 2
+    };
   }
 
   function spawnParticles(x, y, color, count = 8) {
@@ -381,6 +387,27 @@
 
   function readPlays() {
     return Number(readSnakeStats().plays) || 0;
+  }
+
+  function ensurePortalStats() {
+    const stats = readPortalStats();
+    const games = stats.games && typeof stats.games === "object" ? { ...stats.games } : {};
+    const existing = games[gameId] && typeof games[gameId] === "object" ? games[gameId] : null;
+    if (existing && existing.title === gameTitle && "bestScore" in existing && "lastScore" in existing && "plays" in existing) {
+      return;
+    }
+    games[gameId] = {
+      title: gameTitle,
+      bestScore: Number(existing?.bestScore) || 0,
+      lastScore: Number(existing?.lastScore) || 0,
+      plays: Number(existing?.plays) || 0,
+      updatedAt: existing?.updatedAt || new Date().toISOString()
+    };
+    try {
+      window.localStorage.setItem(portalStatsKey, JSON.stringify({ ...stats, games }));
+    } catch {
+      // Ignore private-mode storage failures.
+    }
   }
 
   function writePortalStats(lastScore, bestScore) {
@@ -594,5 +621,12 @@
     document.addEventListener(eventName, (event) => {
       event.preventDefault();
     }, { passive: false });
+  });
+
+  window.addEventListener("pagehide", () => {
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = 0;
+    }
   });
 })();

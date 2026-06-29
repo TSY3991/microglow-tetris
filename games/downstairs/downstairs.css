@@ -172,6 +172,7 @@ body {
 }
 
 .score-grid > div,
+.challenge-card,
 .help-card {
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -197,6 +198,59 @@ body {
   color: var(--teal-deep);
   font-size: 1.8rem;
   line-height: 1;
+}
+
+.challenge-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.challenge-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.challenge-heading span {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.challenge-heading strong {
+  color: var(--teal-deep);
+  font-size: 1.22rem;
+  line-height: 1;
+}
+
+.challenge-heading b {
+  font: inherit;
+}
+
+.target-track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(13, 148, 136, 0.14);
+}
+
+.target-track span {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--cyan), var(--yellow));
+  transition: width 180ms ease;
+}
+
+.challenge-card p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  font-weight: 760;
+  line-height: 1.45;
 }
 
 .help-card {
@@ -466,6 +520,26 @@ body {
   .downstairs-panel {
     gap: 6px;
     min-height: 0;
+  }
+
+  .challenge-card {
+    padding: 8px;
+  }
+
+  .challenge-heading span {
+    font-size: 0.74rem;
+  }
+
+  .challenge-heading strong {
+    font-size: 0.96rem;
+  }
+
+  .target-track {
+    height: 8px;
+  }
+
+  .challenge-card p {
+    display: none;
   }
 
   .help-card {
