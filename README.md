@@ -6,6 +6,8 @@
 - GitHub Pages repo name：`TSY.Microglow-Games`
 - 遊戲大廳：https://tsy3991.github.io/TSY.Microglow-Games/
 - 俄羅斯方塊：https://tsy3991.github.io/TSY.Microglow-Games/games/tetris/
+- 貪吃蛇：https://tsy3991.github.io/TSY.Microglow-Games/games/snake/
+- 小朋友下樓梯：https://tsy3991.github.io/TSY.Microglow-Games/games/downstairs/
 - metadata：`portal-game.json`
 
 ## Structure
@@ -21,12 +23,21 @@ Games/
       index.html
       tetris.css
       tetris.js
+    snake/
+      index.html
+      snake.css
+      snake.js
+    downstairs/
+      index.html
+      downstairs.css
+      downstairs.js
 ```
 
 ## Current Games
 
 - `games/tetris/`: 霓虹方塊俄羅斯，支援鍵盤、手機觸控、本機最高分、下一顆預覽、等級、暫停與音效切換。
-- `games/snake/`: 後續新增貪吃蛇時放在這個路徑。
+- `games/snake/`: 微光貪吃蛇，支援鍵盤、手機觸控、本機最高分、玩法彈窗與暫停。
+- `games/downstairs/`: 小朋友下樓梯，支援鍵盤、手機觸控、本機最高分、玩法彈窗與暫停。
 
 ## Portal Integration
 
@@ -36,7 +47,7 @@ Games/
 tsyMicroglowPortal.gameStats.v1
 ```
 
-只更新 `games.microglow-tetris`，不覆蓋其他遊戲紀錄。
+各遊戲只更新自己的 `games.*` 紀錄，不覆蓋其他遊戲紀錄。
 
 ## Deployment
 

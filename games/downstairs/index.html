@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta
+      name="description"
+      content="TSY.Microglow 小朋友下樓梯小遊戲，支援桌機鍵盤與手機觸控。"
+    >
+    <title>小朋友下樓梯｜TSY.Microglow Games</title>
+    <link rel="stylesheet" href="../../shared/base.css">
+    <link rel="stylesheet" href="./downstairs.css?v=20260629d">
+  </head>
+  <body>
+    <main class="downstairs-shell">
+      <header class="game-topbar">
+        <nav class="return-nav" aria-label="返回連結">
+          <a class="back-link compact-back" href="../../">回遊戲大廳</a>
+          <a class="portal-return" href="https://tsy3991.github.io/TSY.Microglow-Website/" data-portal-return>返回入口網站</a>
+        </nav>
+        <div>
+          <p class="eyebrow">Tiny Stairs</p>
+          <h1>小朋友下樓梯</h1>
+        </div>
+        <div class="top-actions" aria-label="遊戲控制">
+          <button type="button" data-action="instructions">玩法</button>
+          <button type="button" data-action="start">開始</button>
+          <button type="button" data-action="pause">暫停</button>
+          <button type="button" data-action="restart">重開</button>
+        </div>
+      </header>
+
+      <section class="downstairs-layout" aria-label="小朋友下樓梯遊戲區">
+        <div class="board-wrap">
+          <canvas id="downstairsBoard" width="360" height="560" aria-label="下樓梯主遊戲區"></canvas>
+          <div class="game-overlay" data-overlay>
+            <strong data-overlay-title>準備開始</strong>
+            <span data-overlay-message>左右移動，找到下一層樓梯往下走</span>
+            <button type="button" data-action="overlay-start">開始遊戲</button>
+          </div>
+        </div>
+
+        <aside class="downstairs-panel" aria-label="分數與狀態">
+          <div class="score-grid">
+            <div>
+              <span>分數</span>
+              <strong data-score>0</strong>
+            </div>
+            <div>
+              <span>最高分</span>
+              <strong data-best>0</strong>
+            </div>
+            <div>
+              <span>樓層</span>
+              <strong data-floor>0</strong>
+            </div>
+            <div>
+              <span>遊玩</span>
+              <strong data-plays>0</strong>
+            </div>
+          </div>
+
+          <div class="help-card">
+            <h2>操作</h2>
+            <p>桌機：方向鍵或 A / D 左右移動，向下鍵或 S 可以直接穿過目前樓梯，空白鍵暫停。</p>
+            <p>手機：使用下方左右與下樓按鈕，也可以按住畫面左右兩側移動。</p>
+          </div>
+        </aside>
+      </section>
+
+      <section class="touch-controls" aria-label="手機觸控控制">
+        <button type="button" data-control="left">左</button>
+        <button type="button" data-control="drop">下樓</button>
+        <button type="button" data-control="right">右</button>
+      </section>
+
+      <div class="instruction-modal" role="dialog" aria-modal="true" aria-labelledby="instruction-title" data-instruction-modal>
+        <div class="instruction-card">
+          <p class="instruction-kicker">遊玩方式</p>
+          <h2 id="instruction-title">一路往下，不要被畫面頂到</h2>
+          <div class="instruction-list">
+            <div>
+              <strong>左右移動</strong>
+              <span>控制小朋友踩到下一層平台，平台會慢慢往上移動。</span>
+            </div>
+            <div>
+              <strong>下樓按鈕</strong>
+              <span>按住向下鍵、S 或手機「下樓」可以穿過目前平台，快速掉到下一層。</span>
+            </div>
+            <div>
+              <strong>安全目標</strong>
+              <span>不要被平台推到畫面最上方，也不要掉出畫面底部。</span>
+            </div>
+            <div>
+              <strong>加分方式</strong>
+              <span>每往下一層會加分，吃到星星可以再加分。</span>
+            </div>
+          </div>
+          <p class="instruction-note">遊戲速度會隨分數慢慢提升，適合反覆挑戰最高分。</p>
+          <div class="instruction-actions">
+            <button type="button" data-instruction-start>開始遊戲</button>
+            <button type="button" data-instruction-close>先看看</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="../../shared/portal-return.js"></script>
+    <script src="./downstairs.js?v=20260629d"></script>
+  </body>
+</html>
