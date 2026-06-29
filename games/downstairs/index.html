@@ -9,7 +9,7 @@
     >
     <title>小朋友下樓梯｜TSY.Microglow Games</title>
     <link rel="stylesheet" href="../../shared/base.css">
-    <link rel="stylesheet" href="./downstairs.css?v=20260629d">
+    <link rel="stylesheet" href="./downstairs.css?v=20260629e">
   </head>
   <body>
     <main class="downstairs-shell">
@@ -35,7 +35,7 @@
           <canvas id="downstairsBoard" width="360" height="560" aria-label="下樓梯主遊戲區"></canvas>
           <div class="game-overlay" data-overlay>
             <strong data-overlay-title>準備開始</strong>
-            <span data-overlay-message>左右移動，挑戰下到 100 層</span>
+            <span data-overlay-message>控制微光小機器人，挑戰下到 100 層</span>
             <button type="button" data-action="overlay-start">開始遊戲</button>
           </div>
         </div>
@@ -68,7 +68,7 @@
             <div class="target-track" aria-hidden="true">
               <span data-target-progress></span>
             </div>
-            <p>下到第 100 層完成挑戰，之後可以繼續往更深樓層衝高分。</p>
+            <p>控制微光小機器人下到第 100 層，之後可以繼續往更深樓層衝高分。</p>
           </div>
 
           <div class="help-card">
@@ -92,7 +92,7 @@
           <div class="instruction-list">
             <div>
               <strong>左右移動</strong>
-              <span>控制小朋友踩到下一層平台，平台會慢慢往上移動。</span>
+              <span>控制微光小機器人踩到下一層平台，平台會慢慢往上移動。</span>
             </div>
             <div>
               <strong>下樓按鈕</strong>
@@ -100,7 +100,7 @@
             </div>
             <div>
               <strong>安全目標</strong>
-              <span>不要被平台推到畫面最上方，也不要掉出畫面底部。</span>
+              <span>不要被平台推到畫面最上方，也不要掉出畫面底部或踩到紅色危險平台。</span>
             </div>
             <div>
               <strong>100 層挑戰</strong>
@@ -111,7 +111,7 @@
               <span>每往下一層會加分，吃到星星可以再加分。</span>
             </div>
           </div>
-          <p class="instruction-note">參考經典下樓梯玩法節奏，保留微光版的星星加分與手機按鈕。</p>
+          <p class="instruction-note">微光科技樓梯風格，保留星星加分、危險平台與手機按鈕。</p>
           <div class="instruction-actions">
             <button type="button" data-instruction-start>開始遊戲</button>
             <button type="button" data-instruction-close>先看看</button>
@@ -122,6 +122,6 @@
 
     <script src="../../shared/portal-return.js"></script>
     <script src="../../shared/storage.js"></script>
-    <script src="./downstairs.js?v=20260629d"></script>
+    <script src="./downstairs.js?v=20260629e"></script>
   </body>
 </html>

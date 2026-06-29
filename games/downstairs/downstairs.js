@@ -209,6 +209,13 @@
     }
 
     const platform = candidates.sort((a, b) => a.y - b.y)[0];
+    if (platform.type === "hazard") {
+      player.y = platform.y - playerHeight / 2;
+      player.vy = 0;
+      spawnParticles(player.x, platform.y, "#ff5ebc", 18);
+      endGame("踩到危險平台", "紅色警示階梯會讓微光小機器人短路");
+      return;
+    }
     player.y = platform.y - playerHeight / 2;
     player.vy = 0;
     player.groundedPlatformId = platform.id;
@@ -255,8 +262,10 @@
     const widthRange = Math.max(74, 122 - floor * 0.7);
     const platformWidth = Math.max(66, widthRange + Math.random() * 44);
     const x = 18 + Math.random() * (width - platformWidth - 36);
-    const platform = addPlatform(x, y, platformWidth, "normal");
-    if (Math.random() < 0.34) {
+    const roll = Math.random();
+    const type = floor > 8 && roll > 0.86 ? "hazard" : "normal";
+    const platform = addPlatform(x, y, platformWidth, type);
+    if (type !== "hazard" && Math.random() < 0.34) {
       stars.push({
         x: platform.x + platform.width / 2,
         y: platform.y - 30,
@@ -363,27 +372,38 @@
 
   function drawBackground() {
     const sky = context.createLinearGradient(0, 0, 0, height);
-    sky.addColorStop(0, "#08212a");
-    sky.addColorStop(0.52, "#103d47");
-    sky.addColorStop(1, "#f7e9ad");
+    sky.addColorStop(0, "#e7fbff");
+    sky.addColorStop(0.48, "#bdf2f4");
+    sky.addColorStop(1, "#fff2bd");
     context.fillStyle = sky;
     context.fillRect(0, 0, width, height);
 
-    context.fillStyle = "rgba(255, 255, 255, 0.12)";
+    context.fillStyle = "rgba(13, 148, 136, 0.12)";
     for (let index = 0; index < 52; index += 1) {
       const x = (index * 61) % width;
       const y = (index * 97 + floor * 9) % height;
       context.fillRect(x, y, 2, 2);
+    }
+
+    context.strokeStyle = "rgba(47, 215, 255, 0.16)";
+    context.lineWidth = 1;
+    for (let y = -24; y < height; y += 32) {
+      context.beginPath();
+      context.moveTo(0, y + ((floor * 5) % 32));
+      context.lineTo(width, y + ((floor * 5) % 32));
+      context.stroke();
     }
   }
 
   function drawPlatforms() {
     platforms.forEach((platform) => {
       const gradient = context.createLinearGradient(platform.x, platform.y, platform.x, platform.y + platformHeight);
-      gradient.addColorStop(0, platform.type === "start" ? "#8df45f" : "#ffd84d");
-      gradient.addColorStop(1, platform.type === "start" ? "#0d9488" : "#ff9f43");
+      const topColor = platform.type === "hazard" ? "#ff5ebc" : platform.type === "start" ? "#8df45f" : "#2fd7ff";
+      const bottomColor = platform.type === "hazard" ? "#ba285f" : platform.type === "start" ? "#0d9488" : "#0d9488";
+      gradient.addColorStop(0, topColor);
+      gradient.addColorStop(1, bottomColor);
       context.fillStyle = gradient;
-      context.shadowColor = platform.type === "start" ? "rgba(141, 244, 95, 0.6)" : "rgba(255, 216, 77, 0.46)";
+      context.shadowColor = platform.type === "hazard" ? "rgba(255, 94, 188, 0.5)" : "rgba(47, 215, 255, 0.46)";
       context.shadowBlur = 12;
       roundRect(platform.x, platform.y, platform.width, platformHeight, 6);
       context.fill();
@@ -392,6 +412,17 @@
       context.fillStyle = "rgba(255, 255, 255, 0.46)";
       roundRect(platform.x + 8, platform.y + 3, Math.max(12, platform.width - 16), 2, 2);
       context.fill();
+
+      if (platform.type === "hazard") {
+        context.fillStyle = "rgba(255, 255, 255, 0.8)";
+        for (let x = platform.x + 10; x < platform.x + platform.width - 8; x += 18) {
+          context.beginPath();
+          context.moveTo(x, platform.y + 2);
+          context.lineTo(x + 7, platform.y + platformHeight - 2);
+          context.lineTo(x + 14, platform.y + 2);
+          context.fill();
+        }
+      }
     });
   }
 
@@ -425,38 +456,52 @@
     context.save();
     context.translate(x, y);
 
-    context.fillStyle = "#ffcc8a";
+    context.fillStyle = "rgba(7, 36, 43, 0.26)";
+    context.beginPath();
+    context.ellipse(0, 22, 17, 5, 0, 0, Math.PI * 2);
+    context.fill();
+
+    context.fillStyle = "#eaffff";
     context.shadowColor = "rgba(47, 215, 255, 0.42)";
     context.shadowBlur = 12;
-    context.beginPath();
-    context.arc(0, -12, 11, 0, Math.PI * 2);
+    roundRect(-13, -25, 26, 22, 8);
     context.fill();
 
     context.fillStyle = "#2fd7ff";
-    roundRect(-11, -2, 22, 22, 8);
+    roundRect(-12, -3, 24, 24, 7);
     context.fill();
 
-    context.fillStyle = "#07242b";
-    context.beginPath();
-    context.arc(-4, -14, 1.6, 0, Math.PI * 2);
-    context.arc(4, -14, 1.6, 0, Math.PI * 2);
+    context.fillStyle = "#07343d";
+    roundRect(-9, -20, 18, 11, 4);
     context.fill();
 
-    context.strokeStyle = "#07242b";
-    context.lineWidth = 2;
+    context.fillStyle = "#8df45f";
     context.beginPath();
-    context.arc(0, -10, 4, 0.08 * Math.PI, 0.92 * Math.PI);
+    context.arc(-4, -15, 1.8, 0, Math.PI * 2);
+    context.arc(4, -15, 1.8, 0, Math.PI * 2);
+    context.fill();
+
+    context.strokeStyle = "#8df45f";
+    context.lineWidth = 1.6;
+    context.beginPath();
+    context.moveTo(-4, -11);
+    context.quadraticCurveTo(0, -8, 4, -11);
     context.stroke();
 
-    context.strokeStyle = "#ffcc8a";
+    context.strokeStyle = "#2fd7ff";
     context.lineWidth = 4;
     context.lineCap = "round";
     context.beginPath();
-    context.moveTo(-8, 8);
-    context.lineTo(-14, 18);
-    context.moveTo(8, 8);
-    context.lineTo(14, 18);
+    context.moveTo(-9, 6);
+    context.lineTo(-15, 15);
+    context.moveTo(9, 6);
+    context.lineTo(15, 15);
     context.stroke();
+
+    context.fillStyle = "#ffd84d";
+    context.beginPath();
+    context.arc(0, -30, 3, 0, Math.PI * 2);
+    context.fill();
 
     context.restore();
     context.shadowBlur = 0;

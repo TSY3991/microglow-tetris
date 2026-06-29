@@ -1,8 +1,9 @@
 body {
   background:
-    linear-gradient(90deg, rgba(255, 216, 77, 0.08) 1px, transparent 1px),
-    linear-gradient(rgba(47, 215, 255, 0.07) 1px, transparent 1px),
-    linear-gradient(135deg, #10232b 0%, #15373d 42%, #fff9e8 42.2%, #f7fbf8 100%);
+    linear-gradient(90deg, rgba(47, 215, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(13, 148, 136, 0.07) 1px, transparent 1px),
+    radial-gradient(circle at 18% 12%, rgba(141, 244, 95, 0.18), transparent 28%),
+    linear-gradient(135deg, #eafcff 0%, #f7fff4 44%, #fff8e7 100%);
   background-size: 34px 34px, 34px 34px, auto;
   overscroll-behavior: none;
   touch-action: manipulation;
@@ -24,6 +25,7 @@ body {
   align-items: end;
   margin-bottom: 16px;
   color: #ffffff;
+  text-shadow: 0 2px 10px rgba(7, 45, 50, 0.22);
 }
 
 .compact-back {
@@ -110,14 +112,28 @@ body {
   border: 1px solid rgba(255, 216, 77, 0.34);
   border-radius: var(--radius);
   background:
-    linear-gradient(135deg, rgba(8, 24, 31, 0.94), rgba(20, 54, 60, 0.92)),
-    #0d2229;
+    linear-gradient(135deg, rgba(236, 255, 255, 0.84), rgba(223, 252, 239, 0.76)),
+    #f7fffb;
   box-shadow:
-    0 22px 60px rgba(7, 18, 24, 0.3),
+    0 22px 60px rgba(7, 55, 61, 0.16),
     inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
+.board-wrap::before {
+  position: absolute;
+  inset: 14px;
+  border-radius: 6px;
+  background:
+    linear-gradient(90deg, rgba(47, 215, 255, 0.14) 1px, transparent 1px),
+    linear-gradient(rgba(141, 244, 95, 0.1) 1px, transparent 1px);
+  background-size: 24px 24px;
+  content: "";
+  pointer-events: none;
+}
+
 #downstairsBoard {
+  position: relative;
+  z-index: 1;
   display: block;
   width: min(100%, 360px);
   aspect-ratio: 9 / 14;
@@ -132,6 +148,7 @@ body {
 
 .game-overlay {
   position: absolute;
+  z-index: 2;
   inset: 14px;
   display: grid;
   place-items: center;
@@ -397,9 +414,9 @@ body {
 @media (max-width: 820px) {
   body {
     background:
-      linear-gradient(90deg, rgba(255, 216, 77, 0.08) 1px, transparent 1px),
-      linear-gradient(rgba(47, 215, 255, 0.07) 1px, transparent 1px),
-      linear-gradient(180deg, #10232b 0 300px, #f7fbf8 300px 100%);
+      linear-gradient(90deg, rgba(47, 215, 255, 0.08) 1px, transparent 1px),
+      linear-gradient(rgba(13, 148, 136, 0.07) 1px, transparent 1px),
+      linear-gradient(180deg, #dffcff 0 300px, #f7fbf8 300px 100%);
     background-size: 32px 32px, 32px 32px, auto;
   }
 
@@ -497,6 +514,10 @@ body {
 
   .board-wrap {
     padding: 8px;
+  }
+
+  .board-wrap::before {
+    inset: 8px;
   }
 
   #downstairsBoard {
@@ -641,5 +662,11 @@ body {
     min-height: 42px;
     padding: 0 2px;
     font-size: 0.74rem;
+  }
+}
+
+@media (max-width: 380px) and (max-height: 700px) {
+  .challenge-card {
+    display: none;
   }
 }
