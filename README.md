@@ -4,7 +4,7 @@
 
 - 入口網站：https://tsy3991.github.io/TSY.Microglow-Website/
 - GitHub Pages repo name：`TSY.Microglow-Games`
-- 小遊戲大廳：https://tsy3991.github.io/TSY.Microglow-Games/
+- 遊戲大廳：https://tsy3991.github.io/TSY.Microglow-Games/
 - 俄羅斯方塊：https://tsy3991.github.io/TSY.Microglow-Games/games/tetris/
 - metadata：`portal-game.json`
 
