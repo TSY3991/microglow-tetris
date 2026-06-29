@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta
+      name="description"
+      content="TSY.Microglow 微光寶石舒壓消消樂，無時限交換相鄰寶石達成目標分數。"
+    >
+    <title>微光寶石｜TSY.Microglow Games</title>
+    <link rel="stylesheet" href="../../shared/base.css">
+    <link rel="stylesheet" href="./gem.css?v=20260629a">
+  </head>
+  <body>
+    <main class="gem-shell">
+      <header class="game-topbar">
+        <nav class="return-nav" aria-label="返回連結">
+          <a class="back-link compact-back" href="../../">回遊戲大廳</a>
+          <a class="portal-return" href="https://tsy3991.github.io/TSY.Microglow-Website/" data-portal-return>返回入口網站</a>
+        </nav>
+        <div>
+          <p class="eyebrow">Relax Match-3</p>
+          <h1>微光寶石</h1>
+        </div>
+        <div class="top-actions" aria-label="遊戲控制">
+          <button type="button" data-action="instructions">玩法</button>
+          <button type="button" data-action="start">開始</button>
+          <button type="button" data-action="hint">提示</button>
+          <button type="button" data-action="shuffle">洗牌</button>
+          <button type="button" data-action="restart">重開</button>
+        </div>
+      </header>
+
+      <section class="gem-layout" aria-label="微光寶石遊戲區">
+        <div class="board-wrap">
+          <canvas id="gemBoard" width="448" height="448" aria-label="寶石盤面"></canvas>
+          <div class="game-overlay" data-overlay>
+            <strong data-overlay-title>準備開始</strong>
+            <span data-overlay-message>交換相鄰寶石形成 3 連，達成目標分數進入下一關。</span>
+            <button type="button" data-action="overlay-start">開始遊戲</button>
+          </div>
+        </div>
+
+        <aside class="gem-panel" aria-label="分數與狀態">
+          <div class="score-grid">
+            <div>
+              <span>分數</span>
+              <strong data-score>0</strong>
+            </div>
+            <div>
+              <span>最高分</span>
+              <strong data-best>0</strong>
+            </div>
+            <div>
+              <span>關卡</span>
+              <strong data-stage>1</strong>
+            </div>
+            <div>
+              <span>遊玩</span>
+              <strong data-plays>0</strong>
+            </div>
+          </div>
+
+          <div class="challenge-card" aria-label="關卡目標進度">
+            <div class="challenge-heading">
+              <span>關卡目標</span>
+              <strong><b data-target-current>0</b> / <b data-target-goal>5000</b></strong>
+            </div>
+            <div class="target-track" aria-hidden="true">
+              <span data-target-progress></span>
+            </div>
+            <p data-stage-hint>第 1 關目標 5000 分，無時限、無步數限制。</p>
+          </div>
+
+          <div class="help-card">
+            <h2>操作</h2>
+            <p>桌機：滑鼠拖曳寶石到相鄰格交換，或點兩格依序選取；箭頭鍵可移動選取游標、空白鍵確定。</p>
+            <p>手機：點選寶石後再點相鄰寶石，或直接拖曳。</p>
+          </div>
+        </aside>
+      </section>
+
+      <div class="instruction-modal" role="dialog" aria-modal="true" aria-labelledby="instruction-title" data-instruction-modal hidden>
+        <div class="instruction-card">
+          <p class="instruction-kicker">遊玩方式</p>
+          <h2 id="instruction-title">舒壓寶石對對碰</h2>
+          <div class="instruction-list">
+            <div>
+              <strong>交換相鄰</strong>
+              <span>將相鄰兩顆寶石交換，形成至少 3 顆同色相連即消除。</span>
+            </div>
+            <div>
+              <strong>4 連 / 5 連</strong>
+              <span>4 連產生「直線消除」道具、5 連 / L / T 形產生「同色清除」道具。觸發時威力加倍。</span>
+            </div>
+            <div>
+              <strong>連鎖加成</strong>
+              <span>消除後寶石下落補新格，若再形成連線會持續連鎖，每階段倍率 ×1.2。</span>
+            </div>
+            <div>
+              <strong>關卡推進</strong>
+              <span>達成目標分數即進入下一關，第 5 關後進入無限模式（每關 +5000）。</span>
+            </div>
+            <div>
+              <strong>無壓力</strong>
+              <span>沒有時間限制、沒有步數限制，無解時自動洗牌。隨時可按提示找一組解。</span>
+            </div>
+          </div>
+          <p class="instruction-note">微光霓虹風，純舒壓向設計。</p>
+          <div class="instruction-actions">
+            <button type="button" data-instruction-start>開始遊戲</button>
+            <button type="button" data-instruction-close>先看看</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="../../shared/portal-return.js"></script>
+    <script src="../../shared/storage.js"></script>
+    <script src="./gem.js?v=20260629a"></script>
+  </body>
+</html>
