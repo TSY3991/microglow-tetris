@@ -292,6 +292,7 @@
       const all = new Set();
       for (let r = 0; r < ROWS; r += 1) for (let c = 0; c < COLS; c += 1) all.add(`${r},${c}`);
       eliminate(all, 1, []);
+      applyGravityAndRefill();
       return true;
     }
     if (aIsBomb || bIsBomb) {
@@ -304,6 +305,7 @@
       cells.add(`${a.r},${a.c}`);
       cells.add(`${b.r},${b.c}`);
       eliminate(cells, 1, []);
+      applyGravityAndRefill();
       return true;
     }
     return false;
