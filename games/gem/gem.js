@@ -13,6 +13,7 @@
   const targetProgressEl = document.querySelector("[data-target-progress]");
   const stageHintEl = document.querySelector("[data-stage-hint]");
   const movesEl = document.querySelector("[data-moves]");
+  const starsEl = document.querySelector("[data-stars]");
   const overlaySecondary = document.querySelector("[data-overlay-secondary]");
   const instructionModal = document.querySelector("[data-instruction-modal]");
   const storage = window.MicroglowStorage;
@@ -79,6 +80,8 @@
   let score = 0;
   let best = 0;
   let plays = 0;
+  let bestStars = 0;
+  let totalStars = 0;
   let stage = 1;
   let stageScoreAtStart = 0;
   let movesLeft = stageConfig(1).moves;
@@ -96,10 +99,12 @@
   let lastTime = 0;
   let particles = [];
   let chainPopups = []; // {x,y,text,life,maxLife}
+  let backgroundCanvas = null; // cached static board background, rendered once on first draw
 
   ensurePortalStats();
   best = readBestScore();
   plays = readPlays();
+  bestStars = readBestStars();
 
   initBoard();
   updateUi();
@@ -132,11 +137,15 @@
     return Number(readGameStats().plays) || 0;
   }
 
+  function readBestStars() {
+    return Number(readGameStats().bestStars) || 0;
+  }
+
   function ensurePortalStats() {
     const stats = readPortalStats();
     const games = stats.games && typeof stats.games === "object" ? { ...stats.games } : {};
     const existing = games[gameId] && typeof games[gameId] === "object" ? games[gameId] : null;
-    if (existing && existing.title === gameTitle && "bestScore" in existing && "lastScore" in existing && "plays" in existing) {
+    if (existing && existing.title === gameTitle && "bestScore" in existing && "lastScore" in existing && "plays" in existing && "bestStars" in existing) {
       return;
     }
     games[gameId] = {
@@ -145,6 +154,7 @@
       lastScore: Number(existing?.lastScore) || 0,
       plays: Number(existing?.plays) || 0,
       bestStage: Number(existing?.bestStage) || 1,
+      bestStars: Number(existing?.bestStars) || 0,
       updatedAt: existing?.updatedAt || new Date().toISOString()
     };
     try {
@@ -154,7 +164,7 @@
     }
   }
 
-  function writePortalStats(lastScore, bestScore, bestStage) {
+  function writePortalStats(lastScore, bestScore, bestStage, totalStarsThisRun) {
     const stats = readPortalStats();
     const games = stats.games && typeof stats.games === "object" ? { ...stats.games } : {};
     const existing = games[gameId] && typeof games[gameId] === "object" ? games[gameId] : {};
@@ -165,6 +175,7 @@
       lastScore,
       plays: playCount,
       bestStage: Math.max(Number(existing.bestStage) || 1, bestStage),
+      bestStars: Math.max(Number(existing.bestStars) || 0, totalStarsThisRun || 0),
       updatedAt: new Date().toISOString()
     };
     try {
@@ -308,6 +319,7 @@
     if (!inBounds(a.r, a.c) || !inBounds(b.r, b.c)) return;
     if (!isAdjacent(a, b)) return;
     busy = true;
+    wake();
     swap(a, b);
     // Special triggers always succeed (color-bomb on anything)
     const aGem = board[b.r][b.c]; // after swap, original a is now at b
@@ -605,6 +617,7 @@
 
   function shuffleBoard() {
     busy = true;
+    wake();
     shuffleBoardSilently();
     busy = false;
   }
@@ -637,41 +650,57 @@
     }
     hintPair = pair;
     hintBlinkUntil = performance.now() + 2400;
+    wake();
   }
 
   /* ---------- stage progression ---------- */
 
+  // Stars reward finishing a stage with moves to spare (skill signal), like most match-3 games.
+  function computeStars(movesBudget, movesRemaining) {
+    const ratio = movesBudget > 0 ? movesRemaining / movesBudget : 0;
+    if (ratio >= 0.5) return 3;
+    if (ratio >= 0.2) return 2;
+    return 1;
+  }
+
+  function starGlyphs(stars) {
+    return "★".repeat(stars) + "☆".repeat(3 - stars);
+  }
+
   function checkStageProgress() {
-    const goal = stageConfig(stage).goal;
+    const cfg = stageConfig(stage);
     const gained = score - stageScoreAtStart;
-    if (gained < goal) return;
+    if (gained < cfg.goal) return;
+    const stars = computeStars(cfg.moves, movesLeft);
+    totalStars += stars;
     if (stage >= MAX_STORY_STAGE && !endlessMode) {
-      triggerVictory();
+      triggerVictory(stars);
       return;
     }
     stage += 1;
     stageScoreAtStart = score;
-    const cfg = stageConfig(stage);
-    movesLeft = cfg.moves;
-    colorCount = cfg.colors;
-    announce(`進入第 ${stage} 關！`);
+    const nextCfg = stageConfig(stage);
+    movesLeft = nextCfg.moves;
+    colorCount = nextCfg.colors;
+    announce(`${starGlyphs(stars)} 進入第 ${stage} 關！`);
     updateUi();
   }
 
-  function triggerVictory() {
+  function triggerVictory(lastStageStars) {
     running = false;
     if (animationFrameId) {
       cancelAnimationFrame(animationFrameId);
       animationFrameId = 0;
     }
-    const result = writePortalStats(score, Math.max(best, score), stage);
+    const result = writePortalStats(score, Math.max(best, score), stage, totalStars);
     plays = result.plays;
     best = result.bestScore;
+    bestStars = result.bestStars;
     updateUi();
     draw();
     showOverlay(
       "恭喜通關！",
-      `完成全部 ${MAX_STORY_STAGE} 關，最終分數 ${score}。可以重新開始，或進入無限模式持續刷分（步數更少、難度更高）。`,
+      `${starGlyphs(lastStageStars)} 完成全部 ${MAX_STORY_STAGE} 關，最終分數 ${score}，總星數 ${totalStars}（歷史最佳 ${bestStars}）。可以重新開始，或進入無限模式持續刷分（步數更少、難度更高）。`,
       "重新開始",
       true
     );
@@ -683,14 +712,15 @@
       cancelAnimationFrame(animationFrameId);
       animationFrameId = 0;
     }
-    const result = writePortalStats(score, Math.max(best, score), stage);
+    const result = writePortalStats(score, Math.max(best, score), stage, totalStars);
     plays = result.plays;
     best = result.bestScore;
+    bestStars = result.bestStars;
     updateUi();
     draw();
     showOverlay(
       "步數用盡",
-      `本局停在第 ${stage} 關，得分 ${score}。按重新開始再挑戰一次！`,
+      `本局停在第 ${stage} 關，得分 ${score}，總星數 ${totalStars}（歷史最佳 ${bestStars}）。按重新開始再挑戰一次！`,
       "重新開始",
       false
     );
@@ -706,8 +736,7 @@
     running = true;
     hideOverlay();
     updateUi();
-    lastTime = performance.now();
-    animationFrameId = requestAnimationFrame(loop);
+    wake();
   }
 
   function updateUi() {
@@ -719,6 +748,7 @@
       movesEl.textContent = String(movesLeft);
       movesEl.classList.toggle("is-low", movesLeft <= 5);
     }
+    if (starsEl) starsEl.textContent = String(totalStars);
     const cfg = stageConfig(stage);
     const goal = cfg.goal;
     const gained = Math.max(0, score - stageScoreAtStart);
@@ -770,44 +800,58 @@
 
   /* ---------- draw ---------- */
 
+  // The board glow/checkerboard/grid never change shape or position, so they're rendered once to
+  // an offscreen canvas and blitted every frame instead of rebuilding gradients on every paint
+  // (this was a big chunk of the per-frame CPU/GPU cost that made phones run hot).
+  function getBackgroundCanvas() {
+    if (backgroundCanvas) return backgroundCanvas;
+    const w = boardCanvas.width;
+    const h = boardCanvas.height;
+    backgroundCanvas = document.createElement("canvas");
+    backgroundCanvas.width = w;
+    backgroundCanvas.height = h;
+    const bg = backgroundCanvas.getContext("2d");
+    const boardGlow = bg.createRadialGradient(w * 0.28, h * 0.18, 20, w * 0.5, h * 0.45, w * 0.85);
+    boardGlow.addColorStop(0, "rgba(47, 215, 255, 0.18)");
+    boardGlow.addColorStop(0.45, "rgba(13, 148, 136, 0.11)");
+    boardGlow.addColorStop(1, "rgba(6, 18, 24, 0.98)");
+    bg.fillStyle = boardGlow;
+    bg.fillRect(0, 0, w, h);
+    bg.save();
+    bg.globalAlpha = 0.62;
+    bg.fillStyle = "rgba(255,255,255,0.035)";
+    for (let r = 0; r < ROWS; r += 1) {
+      for (let c = 0; c < COLS; c += 1) {
+        if ((r + c) % 2 === 0) bg.fillRect(c * CELL + 2, r * CELL + 2, CELL - 4, CELL - 4);
+      }
+    }
+    bg.restore();
+    bg.save();
+    bg.shadowColor = "rgba(47, 215, 255, 0.55)";
+    bg.shadowBlur = 12;
+    bg.strokeStyle = "rgba(147, 244, 255, 0.13)";
+    bg.lineWidth = 1;
+    for (let i = 0; i <= COLS; i += 1) {
+      bg.beginPath();
+      bg.moveTo(i * CELL, 0);
+      bg.lineTo(i * CELL, h);
+      bg.stroke();
+    }
+    for (let i = 0; i <= ROWS; i += 1) {
+      bg.beginPath();
+      bg.moveTo(0, i * CELL);
+      bg.lineTo(w, i * CELL);
+      bg.stroke();
+    }
+    bg.restore();
+    return backgroundCanvas;
+  }
+
   function draw() {
     const w = boardCanvas.width;
     const h = boardCanvas.height;
     context.clearRect(0, 0, w, h);
-    // Glass board background
-    const boardGlow = context.createRadialGradient(w * 0.28, h * 0.18, 20, w * 0.5, h * 0.45, w * 0.85);
-    boardGlow.addColorStop(0, "rgba(47, 215, 255, 0.18)");
-    boardGlow.addColorStop(0.45, "rgba(13, 148, 136, 0.11)");
-    boardGlow.addColorStop(1, "rgba(6, 18, 24, 0.98)");
-    context.fillStyle = boardGlow;
-    context.fillRect(0, 0, w, h);
-    context.save();
-    context.globalAlpha = 0.62;
-    context.fillStyle = "rgba(255,255,255,0.035)";
-    for (let r = 0; r < ROWS; r += 1) {
-      for (let c = 0; c < COLS; c += 1) {
-        if ((r + c) % 2 === 0) context.fillRect(c * CELL + 2, r * CELL + 2, CELL - 4, CELL - 4);
-      }
-    }
-    context.restore();
-    context.save();
-    context.shadowColor = "rgba(47, 215, 255, 0.55)";
-    context.shadowBlur = 12;
-    context.strokeStyle = "rgba(147, 244, 255, 0.13)";
-    context.lineWidth = 1;
-    for (let i = 0; i <= COLS; i += 1) {
-      context.beginPath();
-      context.moveTo(i * CELL, 0);
-      context.lineTo(i * CELL, h);
-      context.stroke();
-    }
-    for (let i = 0; i <= ROWS; i += 1) {
-      context.beginPath();
-      context.moveTo(0, i * CELL);
-      context.lineTo(w, i * CELL);
-      context.stroke();
-    }
-    context.restore();
+    context.drawImage(getBackgroundCanvas(), 0, 0);
     // Hint highlight
     const blinkPhase = (Math.floor(performance.now() / 200) % 2 === 0);
     const showHint = hintPair && performance.now() < hintBlinkUntil && blinkPhase;
@@ -1171,12 +1215,48 @@
 
   /* ---------- main loop ---------- */
 
+  // Only the rainbow bomb and wrapped gem spin/rotate per frame; line specials render statically,
+  // so their presence alone shouldn't keep the loop spinning.
+  function boardHasSpinningSpecial() {
+    for (let r = 0; r < ROWS; r += 1) {
+      for (let c = 0; c < COLS; c += 1) {
+        const special = board[r]?.[c]?.special;
+        if (special === SPECIAL_COLOR_BOMB || special === SPECIAL_WRAPPED) return true;
+      }
+    }
+    return false;
+  }
+
+  // Whether the next frame still needs to change anything. When the board is fully idle
+  // (nothing selected/hinted/animating and no bomb/wrapped gem mid-rotation), we stop scheduling
+  // frames entirely instead of redrawing 60x/sec — this is what was keeping phones warm while
+  // the player was just looking at a static board deciding on a move.
+  function needsContinuousRender() {
+    return (
+      busy ||
+      particles.length > 0 ||
+      chainPopups.length > 0 ||
+      Boolean(pointer) ||
+      selected !== null ||
+      cursorVisible ||
+      (hintPair !== null && performance.now() < hintBlinkUntil) ||
+      boardHasSpinningSpecial()
+    );
+  }
+
   function loop(time) {
     if (!running) return;
     const delta = Math.min(0.05, (time - lastTime) / 1000 || 0);
     lastTime = time;
     updateParticles(delta);
     draw();
+    animationFrameId = needsContinuousRender() ? requestAnimationFrame(loop) : 0;
+  }
+
+  // Resumes the render loop (and forces one fresh frame) after user input, if it had idled out.
+  function wake() {
+    if (!running || animationFrameId) return;
+    lastTime = performance.now();
     animationFrameId = requestAnimationFrame(loop);
   }
 
@@ -1187,6 +1267,7 @@
     stage = 1;
     stageScoreAtStart = 0;
     endlessMode = false;
+    totalStars = 0;
     const cfg = stageConfig(1);
     movesLeft = cfg.moves;
     colorCount = cfg.colors;
@@ -1195,16 +1276,16 @@
     initBoard();
     updateUi();
     hideOverlay();
-    lastTime = performance.now();
-    animationFrameId = requestAnimationFrame(loop);
+    wake();
   }
 
   function restartGame() {
     // End current run (count as a play and write stats), then start fresh.
     if (running) {
-      const result = writePortalStats(score, Math.max(best, score), stage);
+      const result = writePortalStats(score, Math.max(best, score), stage, totalStars);
       plays = result.plays;
       best = result.bestScore;
+      bestStars = result.bestStars;
     }
     running = false;
     if (animationFrameId) {
@@ -1215,6 +1296,7 @@
     stage = 1;
     stageScoreAtStart = 0;
     endlessMode = false;
+    totalStars = 0;
     const cfg = stageConfig(1);
     movesLeft = cfg.moves;
     colorCount = cfg.colors;
@@ -1286,6 +1368,7 @@
       moved: false
     };
     try { boardCanvas.setPointerCapture?.(event.pointerId); } catch {}
+    wake();
   }, { passive: false });
 
   boardCanvas.addEventListener("pointermove", (event) => {
@@ -1334,6 +1417,7 @@
     } else {
       selected = tapped;
     }
+    wake();
   });
 
   boardCanvas.addEventListener("pointercancel", () => {
@@ -1373,6 +1457,7 @@
     if (handled) {
       event.preventDefault();
       cursorVisible = true;
+      wake();
     }
   });
 
@@ -1406,7 +1491,7 @@
 
   window.addEventListener("pagehide", () => {
     if (running) {
-      writePortalStats(score, Math.max(best, score), stage);
+      writePortalStats(score, Math.max(best, score), stage, totalStars);
     }
     if (animationFrameId) {
       cancelAnimationFrame(animationFrameId);
