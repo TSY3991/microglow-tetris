@@ -278,12 +278,28 @@ button {
   line-height: 1.55;
 }
 
+.overlay-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
 .game-overlay button {
   padding: 0 20px;
   background: linear-gradient(135deg, var(--yellow), var(--pink));
   color: #21141f;
   font-weight: 950;
   box-shadow: 0 12px 28px rgba(255, 94, 188, 0.22);
+}
+
+.game-overlay button[data-overlay-secondary] {
+  background: linear-gradient(135deg, #9b6bff, var(--cyan));
+  color: #ffffff;
+}
+
+.game-overlay button[hidden] {
+  display: none;
 }
 
 .gem-panel {
@@ -304,8 +320,17 @@ button {
 
 .score-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+}
+
+.moves-cell strong {
+  transition: color 160ms ease, text-shadow 160ms ease;
+}
+
+.moves-cell strong.is-low {
+  color: var(--pink);
+  text-shadow: 0 0 16px rgba(255, 94, 188, 0.6);
 }
 
 .score-grid > div,
@@ -626,7 +651,7 @@ button {
   .score-grid {
     order: -3;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
     width: 100%;
   }

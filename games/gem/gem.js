@@ -12,6 +12,8 @@
   const targetGoalEl = document.querySelector("[data-target-goal]");
   const targetProgressEl = document.querySelector("[data-target-progress]");
   const stageHintEl = document.querySelector("[data-stage-hint]");
+  const movesEl = document.querySelector("[data-moves]");
+  const overlaySecondary = document.querySelector("[data-overlay-secondary]");
   const instructionModal = document.querySelector("[data-instruction-modal]");
   const storage = window.MicroglowStorage;
 
@@ -28,16 +30,50 @@
     { id: 2, name: "yellow", fill: "#ffd84d", glow: "rgba(255, 216, 77, 0.55)" },
     { id: 3, name: "purple", fill: "#9b6bff", glow: "rgba(155, 107, 255, 0.55)" },
     { id: 4, name: "cyan", fill: "#2fd7ff", glow: "rgba(47, 215, 255, 0.55)" },
-    { id: 5, name: "amber", fill: "#ff9a3d", glow: "rgba(255, 154, 61, 0.55)" }
+    { id: 5, name: "amber", fill: "#ff9a3d", glow: "rgba(255, 154, 61, 0.55)" },
+    { id: 6, name: "lime", fill: "#8df45f", glow: "rgba(141, 244, 95, 0.55)" },
+    { id: 7, name: "rose", fill: "#ff4d6a", glow: "rgba(255, 77, 106, 0.55)" }
   ];
 
-  // gem object: { color, special: null | "line-h" | "line-v" | "color-bomb", anim: { ... } }
+  // gem object: { color, special: null | "line-h" | "line-v" | "wrapped" | "color-bomb" }
   const SPECIAL_LINE_H = "line-h";
   const SPECIAL_LINE_V = "line-v";
+  const SPECIAL_WRAPPED = "wrapped";
   const SPECIAL_COLOR_BOMB = "color-bomb";
 
-  const STAGE_GOALS = [5000, 8000, 12000, 18000, 25000];
-  const INFINITE_INCREMENT = 5000;
+  // Finite campaign: 15 hand-tuned stages (goal score / move budget / active gem colors),
+  // then an endless mode with escalating goals and shrinking move budgets.
+  const STAGE_TABLE = [
+    { goal: 2000, moves: 20, colors: 5 },
+    { goal: 3000, moves: 20, colors: 5 },
+    { goal: 4000, moves: 18, colors: 5 },
+    { goal: 5000, moves: 18, colors: 6 },
+    { goal: 6500, moves: 18, colors: 6 },
+    { goal: 8000, moves: 16, colors: 6 },
+    { goal: 9500, moves: 16, colors: 7 },
+    { goal: 11500, moves: 16, colors: 7 },
+    { goal: 13500, moves: 15, colors: 7 },
+    { goal: 16000, moves: 15, colors: 8 },
+    { goal: 18500, moves: 14, colors: 8 },
+    { goal: 21000, moves: 14, colors: 8 },
+    { goal: 24000, moves: 13, colors: 8 },
+    { goal: 27000, moves: 13, colors: 8 },
+    { goal: 30000, moves: 12, colors: 8 }
+  ];
+  const MAX_STORY_STAGE = STAGE_TABLE.length;
+  const ENDLESS_GOAL_STEP = 4000;
+  const ENDLESS_MIN_MOVES = 10;
+
+  function stageConfig(s) {
+    if (s <= MAX_STORY_STAGE) return STAGE_TABLE[s - 1];
+    const over = s - MAX_STORY_STAGE;
+    const lastGoal = STAGE_TABLE[MAX_STORY_STAGE - 1].goal;
+    return {
+      goal: lastGoal + over * ENDLESS_GOAL_STEP,
+      moves: Math.max(ENDLESS_MIN_MOVES, 12 - Math.floor(over / 3)),
+      colors: 8
+    };
+  }
 
   let board = [];
   let score = 0;
@@ -45,6 +81,9 @@
   let plays = 0;
   let stage = 1;
   let stageScoreAtStart = 0;
+  let movesLeft = stageConfig(1).moves;
+  let colorCount = stageConfig(1).colors;
+  let endlessMode = false;
   let running = false;
   let busy = false; // true while animations / resolution running
   let selected = null; // {r, c} or null
@@ -65,7 +104,7 @@
   initBoard();
   updateUi();
   draw();
-  showOverlay("準備開始", "交換相鄰寶石形成 3 連，達成目標分數進入下一關。", "開始遊戲");
+  showOverlay("準備開始", "交換相鄰寶石形成 3 連，在步數用盡前達成目標分數進入下一關。", "開始遊戲");
 
   /* ---------- portal stats ---------- */
 
@@ -139,7 +178,7 @@
   /* ---------- board init ---------- */
 
   function randomColor() {
-    return Math.floor(Math.random() * COLORS.length);
+    return Math.floor(Math.random() * colorCount);
   }
 
   function makeGem(color) {
@@ -167,11 +206,6 @@
     if (!findFirstMove()) {
       shuffleBoardSilently();
     }
-  }
-
-  function goalForStage(s) {
-    if (s <= STAGE_GOALS.length) return STAGE_GOALS[s - 1];
-    return STAGE_GOALS[STAGE_GOALS.length - 1] + (s - STAGE_GOALS.length) * INFINITE_INCREMENT;
   }
 
   /* ---------- match detection ---------- */
@@ -248,6 +282,21 @@
     return Math.abs(a.r - b.r) + Math.abs(a.c - b.c) === 1;
   }
 
+  // Adds the cell keys affected by a non-bomb special (line / wrapped) anchored at (r,c) into `set`.
+  function addAreaCells(set, special, r, c) {
+    if (special === SPECIAL_LINE_H) {
+      for (let cc = 0; cc < COLS; cc += 1) set.add(`${r},${cc}`);
+    } else if (special === SPECIAL_LINE_V) {
+      for (let rr = 0; rr < ROWS; rr += 1) set.add(`${rr},${c}`);
+    } else if (special === SPECIAL_WRAPPED) {
+      for (let rr = r - 1; rr <= r + 1; rr += 1) {
+        for (let cc = c - 1; cc <= c + 1; cc += 1) {
+          if (inBounds(rr, cc)) set.add(`${rr},${cc}`);
+        }
+      }
+    }
+  }
+
   function swap(a, b) {
     const tmp = board[a.r][a.c];
     board[a.r][a.c] = board[b.r][b.c];
@@ -272,9 +321,16 @@
       flashInvalid(a, b);
       return;
     }
+    movesLeft = Math.max(0, movesLeft - 1);
+    updateUi();
     resolveChain(1, specialTriggered).then(() => {
       busy = false;
       checkStageProgress();
+      if (!running) return;
+      if (movesLeft <= 0) {
+        triggerGameOver();
+        return;
+      }
       // If no move exists, auto shuffle.
       if (!findFirstMove()) {
         announce("無解，自動洗牌");
@@ -284,11 +340,12 @@
   }
 
   function handleSpecialSwap(a, b, aGem, bGem) {
-    // If either is color bomb, remove all of the other's color.
     const aIsBomb = aGem.special === SPECIAL_COLOR_BOMB;
     const bIsBomb = bGem.special === SPECIAL_COLOR_BOMB;
+    const isAreaSpecial = (s) => s === SPECIAL_LINE_H || s === SPECIAL_LINE_V || s === SPECIAL_WRAPPED;
+
     if (aIsBomb && bIsBomb) {
-      // remove everything
+      // Both bombs: remove everything.
       const all = new Set();
       for (let r = 0; r < ROWS; r += 1) for (let c = 0; c < COLS; c += 1) all.add(`${r},${c}`);
       eliminate(all, 1, []);
@@ -296,14 +353,61 @@
       return true;
     }
     if (aIsBomb || bIsBomb) {
-      const targetColor = aIsBomb ? bGem.color : aGem.color;
+      const other = aIsBomb ? bGem : aGem;
       const cells = new Set();
-      for (let r = 0; r < ROWS; r += 1) for (let c = 0; c < COLS; c += 1) {
-        if (board[r][c].color === targetColor) cells.add(`${r},${c}`);
+      if (isAreaSpecial(other.special)) {
+        // Bomb + special: every gem of the special's color also detonates that special's effect.
+        for (let r = 0; r < ROWS; r += 1) {
+          for (let c = 0; c < COLS; c += 1) {
+            if (board[r][c].color === other.color) addAreaCells(cells, other.special, r, c);
+          }
+        }
+      } else {
+        // Bomb + plain gem: clear every gem of that color.
+        for (let r = 0; r < ROWS; r += 1) for (let c = 0; c < COLS; c += 1) {
+          if (board[r][c].color === other.color) cells.add(`${r},${c}`);
+        }
       }
-      // Also remove the bomb itself
       cells.add(`${a.r},${a.c}`);
       cells.add(`${b.r},${b.c}`);
+      eliminate(cells, 1, []);
+      applyGravityAndRefill();
+      return true;
+    }
+
+    if (isAreaSpecial(aGem.special) && isAreaSpecial(bGem.special)) {
+      const cells = new Set();
+      const aIsWrapped = aGem.special === SPECIAL_WRAPPED;
+      const bIsWrapped = bGem.special === SPECIAL_WRAPPED;
+      if (aIsWrapped && bIsWrapped) {
+        // Wrapped + wrapped: a big 5x5 blast.
+        for (let rr = a.r - 2; rr <= a.r + 2; rr += 1) {
+          for (let cc = a.c - 2; cc <= a.c + 2; cc += 1) {
+            if (inBounds(rr, cc)) cells.add(`${rr},${cc}`);
+          }
+        }
+      } else if (aIsWrapped || bIsWrapped) {
+        // Line + wrapped: clear 3 rows (horizontal line) or 3 columns (vertical line).
+        const lineGem = aIsWrapped ? bGem : aGem;
+        const horizontal = lineGem.special === SPECIAL_LINE_H;
+        if (horizontal) {
+          for (let dr = -1; dr <= 1; dr += 1) {
+            const rr = a.r + dr;
+            if (rr >= 0 && rr < ROWS) for (let cc = 0; cc < COLS; cc += 1) cells.add(`${rr},${cc}`);
+          }
+        } else {
+          for (let dc = -1; dc <= 1; dc += 1) {
+            const cc = a.c + dc;
+            if (cc >= 0 && cc < COLS) for (let rr = 0; rr < ROWS; rr += 1) cells.add(`${rr},${cc}`);
+          }
+        }
+      } else {
+        // Line + line: clear the full row and column through both swapped cells.
+        addAreaCells(cells, SPECIAL_LINE_H, a.r, a.c);
+        addAreaCells(cells, SPECIAL_LINE_V, a.r, a.c);
+        addAreaCells(cells, SPECIAL_LINE_H, b.r, b.c);
+        addAreaCells(cells, SPECIAL_LINE_V, b.r, b.c);
+      }
       eliminate(cells, 1, []);
       applyGravityAndRefill();
       return true;
@@ -364,8 +468,8 @@
       const color = board[r][c].color;
       if (size >= 5) {
         specials.push({ r, c, special: SPECIAL_COLOR_BOMB, color: -1 });
-      } else if (size === 4) {
-        // Decide horizontal or vertical: count row vs col extent
+      } else {
+        // size === 4: distinguish a straight line from an L/T junction (two runs crossing).
         let minR = ROWS, maxR = 0, minC = COLS, maxC = 0;
         for (const key of group) {
           const [gr, gc] = key.split(",").map(Number);
@@ -374,8 +478,13 @@
           if (gc < minC) minC = gc;
           if (gc > maxC) maxC = gc;
         }
-        const horizontal = (maxC - minC) >= (maxR - minR);
-        specials.push({ r, c, special: horizontal ? SPECIAL_LINE_H : SPECIAL_LINE_V, color });
+        const collinear = minR === maxR || minC === maxC;
+        if (collinear) {
+          const horizontal = (maxC - minC) >= (maxR - minR);
+          specials.push({ r, c, special: horizontal ? SPECIAL_LINE_H : SPECIAL_LINE_V, color });
+        } else {
+          specials.push({ r, c, special: SPECIAL_WRAPPED, color });
+        }
       }
     }
     return specials;
@@ -390,14 +499,10 @@
       const [r, c] = key.split(",").map(Number);
       const gem = board[r]?.[c];
       if (!gem || !gem.special) continue;
-      if (gem.special === SPECIAL_LINE_H) {
-        for (let cc = 0; cc < COLS; cc += 1) {
-          const nk = `${r},${cc}`;
-          if (!expanded.has(nk)) { expanded.add(nk); queue.push(nk); }
-        }
-      } else if (gem.special === SPECIAL_LINE_V) {
-        for (let rr = 0; rr < ROWS; rr += 1) {
-          const nk = `${rr},${c}`;
+      if (gem.special === SPECIAL_LINE_H || gem.special === SPECIAL_LINE_V || gem.special === SPECIAL_WRAPPED) {
+        const areaCells = new Set();
+        addAreaCells(areaCells, gem.special, r, c);
+        for (const nk of areaCells) {
           if (!expanded.has(nk)) { expanded.add(nk); queue.push(nk); }
         }
       } else if (gem.special === SPECIAL_COLOR_BOMB) {
@@ -537,14 +642,72 @@
   /* ---------- stage progression ---------- */
 
   function checkStageProgress() {
-    const goal = goalForStage(stage);
+    const goal = stageConfig(stage).goal;
     const gained = score - stageScoreAtStart;
-    if (gained >= goal) {
-      stage += 1;
-      stageScoreAtStart = score;
-      announce(`進入第 ${stage} 關！`);
-      updateUi();
+    if (gained < goal) return;
+    if (stage >= MAX_STORY_STAGE && !endlessMode) {
+      triggerVictory();
+      return;
     }
+    stage += 1;
+    stageScoreAtStart = score;
+    const cfg = stageConfig(stage);
+    movesLeft = cfg.moves;
+    colorCount = cfg.colors;
+    announce(`進入第 ${stage} 關！`);
+    updateUi();
+  }
+
+  function triggerVictory() {
+    running = false;
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = 0;
+    }
+    const result = writePortalStats(score, Math.max(best, score), stage);
+    plays = result.plays;
+    best = result.bestScore;
+    updateUi();
+    draw();
+    showOverlay(
+      "恭喜通關！",
+      `完成全部 ${MAX_STORY_STAGE} 關，最終分數 ${score}。可以重新開始，或進入無限模式持續刷分（步數更少、難度更高）。`,
+      "重新開始",
+      true
+    );
+  }
+
+  function triggerGameOver() {
+    running = false;
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = 0;
+    }
+    const result = writePortalStats(score, Math.max(best, score), stage);
+    plays = result.plays;
+    best = result.bestScore;
+    updateUi();
+    draw();
+    showOverlay(
+      "步數用盡",
+      `本局停在第 ${stage} 關，得分 ${score}。按重新開始再挑戰一次！`,
+      "重新開始",
+      false
+    );
+  }
+
+  function continueEndless() {
+    endlessMode = true;
+    stage += 1;
+    stageScoreAtStart = score;
+    const cfg = stageConfig(stage);
+    movesLeft = cfg.moves;
+    colorCount = cfg.colors;
+    running = true;
+    hideOverlay();
+    updateUi();
+    lastTime = performance.now();
+    animationFrameId = requestAnimationFrame(loop);
   }
 
   function updateUi() {
@@ -552,15 +715,20 @@
     bestEl.textContent = String(Math.max(best, score));
     stageEl.textContent = String(stage);
     playsEl.textContent = String(plays);
-    const goal = goalForStage(stage);
+    if (movesEl) {
+      movesEl.textContent = String(movesLeft);
+      movesEl.classList.toggle("is-low", movesLeft <= 5);
+    }
+    const cfg = stageConfig(stage);
+    const goal = cfg.goal;
     const gained = Math.max(0, score - stageScoreAtStart);
     targetCurrentEl.textContent = String(gained);
     targetGoalEl.textContent = String(goal);
     targetProgressEl.style.width = `${Math.min(100, Math.round((gained / goal) * 100))}%`;
     if (stageHintEl) {
-      stageHintEl.textContent = stage > STAGE_GOALS.length
-        ? `無限模式 ${stage - STAGE_GOALS.length} 階，每階目標 ${INFINITE_INCREMENT}。`
-        : `第 ${stage} 關目標 ${goal} 分，無時限、無步數限制。`;
+      stageHintEl.textContent = endlessMode
+        ? `無限模式第 ${stage - MAX_STORY_STAGE} 階，目標 ${goal} 分，剩餘 ${movesLeft} 步，使用 ${cfg.colors} 色寶石。`
+        : `第 ${stage} / ${MAX_STORY_STAGE} 關目標 ${goal} 分，剩餘 ${movesLeft} 步，使用 ${cfg.colors} 色寶石。`;
     }
   }
 
@@ -720,7 +888,7 @@
     const now = performance.now();
     const pulse = 0.5 + Math.sin(now / 150) * 0.5;
     const phase = now / 480;
-    const shapeId = gem.color % 6;
+    const shapeId = gem.color % 8;
 
     function makeGemPath(radius, inset = 0) {
       const rr = radius - inset;
@@ -758,7 +926,7 @@
         context.lineTo(x, y + rr * 1.08);
         context.lineTo(x - rr * 0.72, y + rr * 0.86);
         context.lineTo(x - rr, y - rr * 0.2);
-      } else {
+      } else if (shapeId === 5) {
         context.moveTo(x, y - rr);
         context.lineTo(x + rr * 0.72, y - rr * 0.72);
         context.lineTo(x + rr, y);
@@ -767,6 +935,32 @@
         context.lineTo(x - rr * 0.72, y + rr * 0.72);
         context.lineTo(x - rr, y);
         context.lineTo(x - rr * 0.72, y - rr * 0.72);
+      } else if (shapeId === 6) {
+        const spikes = 5;
+        const outerR = rr * 1.05;
+        const innerR = rr * 0.46;
+        for (let i = 0; i < spikes * 2; i += 1) {
+          const rad = i % 2 === 0 ? outerR : innerR;
+          const angle = -Math.PI / 2 + (i * Math.PI) / spikes;
+          const px = x + Math.cos(angle) * rad;
+          const py = y + Math.sin(angle) * rad;
+          if (i === 0) context.moveTo(px, py);
+          else context.lineTo(px, py);
+        }
+      } else {
+        const w1 = rr * 0.42;
+        context.moveTo(x - w1, y - rr);
+        context.lineTo(x + w1, y - rr);
+        context.lineTo(x + w1, y - w1);
+        context.lineTo(x + rr, y - w1);
+        context.lineTo(x + rr, y + w1);
+        context.lineTo(x + w1, y + w1);
+        context.lineTo(x + w1, y + rr);
+        context.lineTo(x - w1, y + rr);
+        context.lineTo(x - w1, y + w1);
+        context.lineTo(x - rr, y + w1);
+        context.lineTo(x - rr, y - w1);
+        context.lineTo(x - w1, y - w1);
       }
       context.closePath();
     }
@@ -905,16 +1099,46 @@
       context.arc(x, y, r * 0.16, 0, Math.PI * 2);
       context.fillStyle = "rgba(5,18,24,0.5)";
       context.fill();
-    } else {
+    } else if (shapeId === 5) {
       context.beginPath();
       context.moveTo(x - r * 0.42, y - r * 0.42);
       context.lineTo(x + r * 0.42, y + r * 0.42);
       context.moveTo(x + r * 0.42, y - r * 0.42);
       context.lineTo(x - r * 0.42, y + r * 0.42);
       context.stroke();
+    } else if (shapeId === 6) {
+      context.beginPath();
+      for (let i = 0; i < 5; i += 1) {
+        const angle = -Math.PI / 2 + (i * Math.PI * 2) / 5;
+        context.moveTo(x, y);
+        context.lineTo(x + Math.cos(angle) * r * 0.46, y + Math.sin(angle) * r * 0.46);
+      }
+      context.stroke();
+    } else {
+      context.strokeRect(x - r * 0.3, y - r * 0.3, r * 0.6, r * 0.6);
     }
 
-    if (gem.special === SPECIAL_LINE_H || gem.special === SPECIAL_LINE_V) {
+    if (gem.special === SPECIAL_WRAPPED) {
+      context.save();
+      context.translate(x, y);
+      context.rotate(phase * 0.4);
+      context.strokeStyle = "rgba(255,255,255,0.85)";
+      context.lineWidth = 1.6;
+      context.shadowColor = "#ffffff";
+      context.shadowBlur = 10;
+      const nr = r * 0.98;
+      context.beginPath();
+      context.moveTo(-nr, -nr * 0.4);
+      context.lineTo(nr, nr * 0.4);
+      context.moveTo(-nr, nr * 0.4);
+      context.lineTo(nr, -nr * 0.4);
+      context.moveTo(-nr * 0.4, -nr);
+      context.lineTo(nr * 0.4, nr);
+      context.moveTo(nr * 0.4, -nr);
+      context.lineTo(-nr * 0.4, nr);
+      context.stroke();
+      context.restore();
+    } else if (gem.special === SPECIAL_LINE_H || gem.special === SPECIAL_LINE_V) {
       const horizontal = gem.special === SPECIAL_LINE_H;
       context.save();
       context.translate(x, y);
@@ -962,6 +1186,10 @@
     score = 0;
     stage = 1;
     stageScoreAtStart = 0;
+    endlessMode = false;
+    const cfg = stageConfig(1);
+    movesLeft = cfg.moves;
+    colorCount = cfg.colors;
     selected = null;
     hintPair = null;
     initBoard();
@@ -986,22 +1214,27 @@
     score = 0;
     stage = 1;
     stageScoreAtStart = 0;
+    endlessMode = false;
+    const cfg = stageConfig(1);
+    movesLeft = cfg.moves;
+    colorCount = cfg.colors;
     selected = null;
     hintPair = null;
     initBoard();
     updateUi();
     draw();
-    showOverlay("已重新開始", "按開始遊戲挑戰新的一局。", "開始遊戲");
+    showOverlay("已重新開始", "按開始遊戲挑戰新的一局。", "開始遊戲", false);
   }
 
   /* ---------- overlay / instructions ---------- */
 
-  function showOverlay(title, message, buttonText) {
+  function showOverlay(title, message, buttonText, showSecondary) {
     if (!overlay) return;
     overlayTitle.textContent = title;
     overlayMessage.textContent = message;
-    const button = overlay.querySelector("button");
+    const button = overlay.querySelector("[data-action='overlay-start']");
     if (button) button.textContent = buttonText;
+    if (overlaySecondary) overlaySecondary.hidden = !showSecondary;
     overlay.hidden = false;
   }
 
@@ -1150,6 +1383,7 @@
       const action = button.dataset.action;
       if (action === "start" || action === "overlay-start") startGame();
       else if (action === "restart") restartGame();
+      else if (action === "overlay-secondary") continueEndless();
       else if (action === "hint") triggerHint();
       else if (action === "shuffle") shuffleBoard();
       else if (action === "instructions") {

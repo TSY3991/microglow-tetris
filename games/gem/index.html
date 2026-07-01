@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <meta
       name="description"
-      content="TSY.Microglow 微光寶石舒壓消消樂，無時限交換相鄰寶石達成目標分數。"
+      content="TSY.Microglow 微光寶石消消樂，限定步數內交換相鄰寶石達成目標分數，隨關卡增加寶石顏色與難度。"
     >
     <title>微光寶石｜TSY.Microglow Games</title>
     <link rel="stylesheet" href="../../shared/base.css">
-    <link rel="stylesheet" href="./gem.css?v=20260630a">
+    <link rel="stylesheet" href="./gem.css?v=20260701a">
   </head>
   <body>
     <main class="gem-shell">
@@ -36,8 +36,11 @@
           <canvas id="gemBoard" width="448" height="448" aria-label="寶石盤面"></canvas>
           <div class="game-overlay" data-overlay>
             <strong data-overlay-title>準備開始</strong>
-            <span data-overlay-message>交換相鄰寶石形成 3 連，達成目標分數進入下一關。</span>
-            <button type="button" data-action="overlay-start">開始遊戲</button>
+            <span data-overlay-message>交換相鄰寶石形成 3 連，在步數用盡前達成目標分數進入下一關。</span>
+            <div class="overlay-actions">
+              <button type="button" data-action="overlay-start">開始遊戲</button>
+              <button type="button" data-action="overlay-secondary" data-overlay-secondary hidden>進入無限模式</button>
+            </div>
           </div>
         </div>
 
@@ -55,6 +58,10 @@
               <span>關卡</span>
               <strong data-stage>1</strong>
             </div>
+            <div class="moves-cell">
+              <span>剩餘步數</span>
+              <strong data-moves>20</strong>
+            </div>
             <div>
               <span>遊玩</span>
               <strong data-plays>0</strong>
@@ -64,12 +71,12 @@
           <div class="challenge-card" aria-label="關卡目標進度">
             <div class="challenge-heading">
               <span>關卡目標</span>
-              <strong><b data-target-current>0</b> / <b data-target-goal>5000</b></strong>
+              <strong><b data-target-current>0</b> / <b data-target-goal>2000</b></strong>
             </div>
             <div class="target-track" aria-hidden="true">
               <span data-target-progress></span>
             </div>
-            <p data-stage-hint>第 1 關目標 5000 分，無時限、無步數限制。</p>
+            <p data-stage-hint>第 1 / 15 關目標 2000 分，剩餘 20 步，使用 5 色寶石。</p>
           </div>
 
           <div class="help-card">
@@ -87,23 +94,31 @@
           <div class="instruction-list">
             <div>
               <strong>交換相鄰</strong>
-              <span>將相鄰兩顆寶石交換，形成至少 3 顆同色相連即消除。</span>
+              <span>將相鄰兩顆寶石交換，形成至少 3 顆同色相連即消除，每次交換消耗 1 步。</span>
             </div>
             <div>
-              <strong>4 連 / 5 連</strong>
-              <span>4 連產生「直線消除」道具、5 連 / L / T 形產生「同色清除」道具。觸發時威力加倍。</span>
+              <strong>特殊寶石</strong>
+              <span>直線 4 連產生「直線消除」；L / T 形 4 連產生「包裹寶石」（炸開 3×3 範圍）；5 連以上產生「彩虹炸彈」（清除同色）。</span>
+            </div>
+            <div>
+              <strong>組合技</strong>
+              <span>交換兩顆特殊寶石可觸發組合效果：直線 ×直線＝雙十字全消、直線 ×包裹＝清 3 排或 3 列、包裹 ×包裹＝5×5 大爆炸、彩虹炸彈 ×任一特殊＝讓同色寶石全部觸發該效果。</span>
             </div>
             <div>
               <strong>連鎖加成</strong>
               <span>消除後寶石下落補新格，若再形成連線會持續連鎖，每階段倍率 ×1.2。</span>
             </div>
             <div>
-              <strong>關卡推進</strong>
-              <span>達成目標分數即進入下一關，第 5 關後進入無限模式（每關 +5000）。</span>
+              <strong>步數挑戰</strong>
+              <span>每關有限定步數，用完仍未達標即遊戲結束；步數用完前達標則進入下一關並補滿新步數。</span>
             </div>
             <div>
-              <strong>無壓力</strong>
-              <span>沒有時間限制、沒有步數限制，無解時自動洗牌。隨時可按提示找一組解。</span>
+              <strong>難度曲線</strong>
+              <span>全 15 關制，寶石顏色數從 5 色逐關增加到 8 色，關卡越後面步數越少、目標分數越高。</span>
+            </div>
+            <div>
+              <strong>通關與無限模式</strong>
+              <span>破完 15 關可選擇進入無限模式，持續挑戰更高分數與更嚴苛的步數限制。無解時自動洗牌，隨時可按提示找一組解。</span>
             </div>
           </div>
           <p class="instruction-note">微光霓虹風，純舒壓向設計。</p>
@@ -117,6 +132,6 @@
 
     <script src="../../shared/portal-return.js"></script>
     <script src="../../shared/storage.js"></script>
-    <script src="./gem.js?v=20260630a"></script>
+    <script src="./gem.js?v=20260701a"></script>
   </body>
 </html>
