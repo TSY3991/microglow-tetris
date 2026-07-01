@@ -67,6 +67,8 @@ button {
 .back-link,
 .portal-return {
   position: relative;
+  top: auto;
+  left: auto;
   display: inline-flex;
   align-items: center;
   min-height: 38px;

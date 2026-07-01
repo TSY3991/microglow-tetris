@@ -667,14 +667,23 @@
     return "★".repeat(stars) + "☆".repeat(3 - stars);
   }
 
+  // Leftover moves don't carry into the next stage — instead they're cashed out as bonus score,
+  // valued at that stage's average points-per-move, so efficient play is always worth something.
+  function computeMoveBonus(cfg, movesRemaining) {
+    if (movesRemaining <= 0 || cfg.moves <= 0) return 0;
+    return movesRemaining * Math.round(cfg.goal / cfg.moves);
+  }
+
   function checkStageProgress() {
     const cfg = stageConfig(stage);
     const gained = score - stageScoreAtStart;
     if (gained < cfg.goal) return;
     const stars = computeStars(cfg.moves, movesLeft);
     totalStars += stars;
+    const bonus = computeMoveBonus(cfg, movesLeft);
+    if (bonus > 0) score += bonus;
     if (stage >= MAX_STORY_STAGE && !endlessMode) {
-      triggerVictory(stars);
+      triggerVictory(stars, bonus);
       return;
     }
     stage += 1;
@@ -682,11 +691,12 @@
     const nextCfg = stageConfig(stage);
     movesLeft = nextCfg.moves;
     colorCount = nextCfg.colors;
-    announce(`${starGlyphs(stars)} 進入第 ${stage} 關！`);
+    const bonusText = bonus > 0 ? `（步數獎勵 +${bonus}）` : "";
+    announce(`${starGlyphs(stars)} 進入第 ${stage} 關！${bonusText}`);
     updateUi();
   }
 
-  function triggerVictory(lastStageStars) {
+  function triggerVictory(lastStageStars, bonus) {
     running = false;
     if (animationFrameId) {
       cancelAnimationFrame(animationFrameId);
@@ -698,9 +708,10 @@
     bestStars = result.bestStars;
     updateUi();
     draw();
+    const bonusText = bonus > 0 ? `（含步數獎勵 +${bonus}）` : "";
     showOverlay(
       "恭喜通關！",
-      `${starGlyphs(lastStageStars)} 完成全部 ${MAX_STORY_STAGE} 關，最終分數 ${score}，總星數 ${totalStars}（歷史最佳 ${bestStars}）。可以重新開始，或進入無限模式持續刷分（步數更少、難度更高）。`,
+      `${starGlyphs(lastStageStars)} 完成全部 ${MAX_STORY_STAGE} 關，最終分數 ${score}${bonusText}，總星數 ${totalStars}（歷史最佳 ${bestStars}）。可以重新開始，或進入無限模式持續刷分（步數更少、難度更高）。`,
       "重新開始",
       true
     );

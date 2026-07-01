@@ -9,7 +9,7 @@
     >
     <title>微光寶石｜TSY.Microglow Games</title>
     <link rel="stylesheet" href="../../shared/base.css">
-    <link rel="stylesheet" href="./gem.css?v=20260702a">
+    <link rel="stylesheet" href="./gem.css?v=20260704a">
   </head>
   <body>
     <main class="gem-shell">
@@ -114,11 +114,15 @@
             </div>
             <div>
               <strong>步數挑戰</strong>
-              <span>每關有限定步數，用完仍未達標即遊戲結束；步數用完前達標則進入下一關並補滿新步數。</span>
+              <span>每關有限定步數，用完仍未達標即遊戲結束；步數用完前達標則進入下一關並補滿新步數（剩餘步數不會帶到下一關）。</span>
             </div>
             <div>
               <strong>星級評分</strong>
               <span>過關時依剩餘步數比例獲得 1～3 顆星：剩餘 ≥50% 得 3★、≥20% 得 2★、其餘 1★，總星數會累計並記錄歷史最佳。</span>
+            </div>
+            <div>
+              <strong>步數獎勵</strong>
+              <span>過關時剩餘的每一步都會換算成分數：以該關「目標分數 ÷ 步數」的平均值計算，打得越快越多分。</span>
             </div>
             <div>
               <strong>難度曲線</strong>
@@ -140,6 +144,6 @@
 
     <script src="../../shared/portal-return.js"></script>
     <script src="../../shared/storage.js"></script>
-    <script src="./gem.js?v=20260702a"></script>
+    <script src="./gem.js?v=20260704a"></script>
   </body>
 </html>
